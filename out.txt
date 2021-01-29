@@ -1,0 +1,20 @@
+   ------------------------------------------------------------
+  | Welcome to ROOT 6.18/04                  https://root.cern |
+  |                               (c) 1995-2019, The ROOT Team |
+  | Built for linuxx8664gcc on Sep 11 2019, 15:38:23           |
+  | From tags/v6-18-04@v6-18-04                                |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
+   ------------------------------------------------------------
+
+
+Processing MP.cpp...
+ p :  path :/home/shoram/Work/Diploma_Thesis/COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1853_merged_2.root
+ c_path :/home/shoram/Work/Diploma_Thesis/COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1853_merged_2.root
+AAAA
+BBB
+CCC
+ path :/home/shoram/Work/Diploma_Thesis/COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1453_merged_2.root
+ c_path :/home/shoram/Work/Diploma_Thesis/COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1453_merged_2.root
+AAAA
+BBB
+CCC
