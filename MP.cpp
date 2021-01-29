@@ -17,8 +17,8 @@ using namespace std;
 char* str_to_char(string _str)
 {
 	int n = _str.length();
-	
 	char* _char = new char[n+1];
+	
     strcpy(_char, _str.c_str());
 
 	return _char;
@@ -34,16 +34,12 @@ struct paths
 
 vector<string>* ReadFiles(string _path, string _key)
 {
-	// cout << "_path " << _path << endl;
 	vector<string> *f = new vector<string>();
-	DIR 	*di;
-
+	DIR 		   *di;
 	struct 	dirent *dir;
 
-	char* 	c_path;
+	char* 		 c_path; //conversion of string to char. opendir function takes only char. 
 	c_path = str_to_char(_path);
-
-	// cout<< "c_path = " << c_path << endl;
 
 	di = opendir(c_path);
 
@@ -51,7 +47,7 @@ vector<string>* ReadFiles(string _path, string _key)
     {
         while ((dir = readdir(di)) != NULL)
         {
-            stringstream ss;
+            stringstream ss;					//backward conversion of char to string.
     		ss  <<  dir->d_name;
     		string strname  = ss.str();
     		if(strname == ".." || strname==".")
@@ -59,93 +55,34 @@ vector<string>* ReadFiles(string _path, string _key)
     			continue;
     		}
 
-    		            std::size_t found = strname.find(_key);
+            std::size_t found = strname.find(_key);			//checking if "key" is present in the string. For Years, the key si 20, for folders - cpg, for root files it's .root. 
 		  	if (found!=std::string::npos)
 		    	{
 		    		f->push_back(dir->d_name);
-		    		// cout << "files in readfiles" << dir->d_name << endl;
 				}
-    		// f->push_back(strname);
-
         }
         closedir(di);
     }
     else {
-        perror ("");
+        perror ("Failed to read dictionaries! Check whether the folders are correctly named!");
         return f;
     }
-
     return f;
 } 
-
-// void ReadFiless()
-// {
-
-//     string path;
-
-//     cout<< " path : ";
-//     cin >> path;
-
-// 	DIR 	*di;
-//     char 	*ptr1,*ptr2, *fname;
-//     int 	retn;
-//     struct 	dirent *dir;
-//     char* 	c_path;
-
-// 	c_path = str_to_char(path);
-
-
-//     di = opendir(c_path); //specify the directory name
-
-//     if (di == NULL)
-//     {
-//         perror("opendir");
-//         return;
-//     }
-
-
-//     if (di)
-//     {
-//         while ((dir = readdir(di)) != NULL)
-//         {
-//             stringstream ss;
-//     		ss  <<  dir->d_name;
-//     		string strname  = ss.str();
-
-//     		cout<< " strname:" << strname << endl;
-//             std::size_t found = strname.find(".root");
-// 		  	if (found!=std::string::npos)
-// 		    	{
-// 		    		files.push_back(realpath(dir->d_name,NULL));
-// 		    		cout << "files in readfiles" << dir->d_name << endl;
-// 				}
-//         }
-//         closedir(di);
-//     }
-//     else {
-//         perror (dir->d_name);
-//         return EXIT_FAILURE;
-//     }
-
-// 	return;
-// }
-
 
 
 void MP() 
 { 
 	vector<string>* years;
-	vector<paths>*  root_file_path = new vector<paths>();
+	vector<paths>  root_file_path;
 
-
-	string p;
-
+	string p;			// request for path in the console. 
     cout<< " p : ";
     cin >> p;
 
-    string key = "20";
+    string key = "20";	// first key, used to save only the folders for years. 20XX. 
 
-	struct paths *r 	= new struct paths;
+	struct paths *r 	= new struct paths; 
 
 	years = ReadFiles(p, key);
 
@@ -175,8 +112,8 @@ void MP()
 
 				cout << "r->year  " << r->year << endl;
 
-				// root_file_path->push_back(r);
-				cout<< " pushbak" << endl;
+				root_file_path.push_back(*r);
+				cout<< " root_file_path files" << root_file_path.at(k).year << endl;
 			}
 		}
 	}
