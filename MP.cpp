@@ -133,8 +133,6 @@ void MP()
 	vector<paths>  root_file_path;
 	root_file_path = ReadFiles();
 	
-	// string* s = new string();
-
 	TH1F* h = new TH1F("hh", "haha", 400, 0.0, 4000);
 
 	for(int i = 0; i < root_file_path.size(); i++)
