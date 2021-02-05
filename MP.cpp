@@ -127,15 +127,12 @@ vector<paths> ReadFiles()
 }
 
 
-
 void MP() 
 { 
 	vector<paths>  root_file_path;
 	root_file_path = ReadFiles();
 	
-	// string* s = new string();
-
-	TH1F* h = new TH1F("hh", "haha", 400, 0.0, 4000);
+	TH1F* h	 = new TH1F("h", "title", 200, 0.0, 2000.0);
 
 	for(int i = 0; i < root_file_path.size(); i++)
 	{
@@ -205,5 +202,7 @@ void MP()
 	}
 
 	h->Draw();
+	TFile* year_hist = new TFile("histogram_years.root", "NEW");
+	h->Write();
 
 }
