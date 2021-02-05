@@ -9,6 +9,7 @@
 #include "TCanvas.h"
 #include "TMath.h"
 #include <limits.h>
+#include "TSystem.h"
 
 using namespace std;
 
@@ -26,15 +27,16 @@ char* str_to_char(string _str)
 
 struct paths
 {
+	string 		directory;
 	string 		year;
 	string 		folder;
 	string 		file;
 
 };
 
-vector<string>* ReadFiles(string _path, string _key)
+vector<string>* ListFiles(string _path, string _key)
 {
-	vector<string> *f = new vector<string>();
+	vector<string> *file_list = new vector<string>();
 	DIR 		   *di;
 	struct 	dirent *dir;
 
@@ -58,80 +60,88 @@ vector<string>* ReadFiles(string _path, string _key)
             std::size_t found = strname.find(_key);			//checking if "key" is present in the string. For Years, the key si 20, for folders - cpg, for root files it's .root. 
 		  	if (found!=std::string::npos)
 		    	{
-		    		f->push_back(dir->d_name);
+		    		file_list->push_back(dir->d_name);
 				}
         }
         closedir(di);
     }
     else {
         perror ("Failed to read dictionaries! Check whether the folders are correctly named!");
-        return f;
+        return file_list;
     }
-    return f;
+    return file_list;
 } 
+
+vector<paths> ReadFiles()
+{
+	vector<paths> files_read;
+	string d;			// request for path in the console. 
+    cout<< "Please specify the path to Data directory: ";
+    cin >> d;
+
+    string key;
+    cout<< "Please specify Year of desired data (Use \"20\" for all years): ";
+    cin >> key;
+
+	vector<string>* years;
+	vector<string>* folders;
+	vector<string>* files;
+
+	struct paths *r 	= new struct paths; 
+
+	years = ListFiles(d, key);
+
+	for (int j = 0; j<years->size(); j++)
+	{
+		if(j == 0 )
+		{
+		    cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
+    		cin >> key;
+		}
+
+		folders = ListFiles(d+"/"+years->at(j), key);
+
+		for(int i = 0; i < folders->size();i++) //files.size()
+		{
+			if(i == 0 )
+			{
+			    cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
+    			cin >> key;
+			}
+
+			files = ListFiles(d + "/" + years->at(j) + "/" + folders->at(i) , key);
+
+			for (int k = 0; k < files->size(); k++)
+			{
+				r->directory	= d;
+
+				r->year 		= years->at(j);
+				r->folder 		= folders->at(i);
+				r->file 		= files->at(k);
+
+				files_read.push_back(*r);
+			}
+		}
+	}
+	return files_read;
+}
+
 
 
 void MP() 
 { 
-	vector<string>* years;
 	vector<paths>  root_file_path;
-
-	string p;			// request for path in the console. 
-    cout<< " p : ";
-    cin >> p;
-
-    string key = "20";	// first key, used to save only the folders for years. 20XX. 
-
-	struct paths *r 	= new struct paths; 
-
-	years = ReadFiles(p, key);
-
-	for (int j = 0; j<years->size(); j++)
-	{
-		vector<string>* folders;
-		folders = ReadFiles(p+"/"+years->at(j), "cpg");
-		// cout << " =================Year: " << years->at(j) <<"=============" << endl;
-		// cout << endl;
-
-		for(int i = 0; i < folders->size();i++) //files.size()
-		{
-			// cout << " =================folder: " << folders->at(i) << "=============" << endl;
-			// cout << endl;
-
-			vector<string>* files;
-			files = ReadFiles(p + "/" + years->at(j) + "/" + folders->at(i) , ".root");
-
-			for (int k = 0; k < files->size(); k++)
-			{
-				// cout << "File names in folders: " << files->at(k) << endl;
-
-				
-				r->year 	= years->at(j);
-				r->folder 	= folders->at(i);
-				r->file 	= files->at(k);
-
-				// cout << "r->year  " << r->year << endl;
-
-				root_file_path.push_back(*r);
-				// cout<< " root_file_path files" << root_file_path.at(k).file << endl;
-			}
-		}
-	}
+	root_file_path = ReadFiles();
 	
-	string* s = new string();
+	// string* s = new string();
 
 	TH1F* h = new TH1F("hh", "haha", 400, 0.0, 4000);
 
-	for(int i = 0; i < 2; i++)
+	for(int i = 0; i < root_file_path.size(); i++)
 	{
 		char* root_file;
 
-		// s = &p + "/" + root_file_path.at(0).year + "/" + &root_file_path.at(0).folder + "/" + root_file_path.at(i).file ; 
-
-		cout<< " path :" << p + "/" + root_file_path.at(0).year + "/" + root_file_path.at(0).folder + "/" + root_file_path.at(i).file  << endl;
-
-		root_file = str_to_char(p + "/" + root_file_path.at(0).year + "/" + root_file_path.at(0).folder + "/" + root_file_path.at(i).file );
-		cout<< " c_path :" << root_file << endl;
+		root_file = str_to_char(root_file_path.at(i).directory + "/" + root_file_path.at(i).year + "/" + root_file_path.at(i).folder + "/" + root_file_path.at(i).file );
 
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
@@ -143,25 +153,16 @@ void MP()
 		vector<bool>*	fip	= new vector<bool>();
 		vector<bool>*	fbp	= new vector<bool>();
 
-		cout<< "AAAA" << endl;
-
-
 		t->SetBranchAddress("cal_edep", &e);
 		t->SetBranchAddress("flag_injected_pulse", &fip);
 		t->SetBranchAddress("flag_bad_pulse", &fbp);
 		t->SetBranchAddress("cal_ipos_ztc", &ztc);
 		t->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
 
-		cout<< "BBB" << endl;
-
-
 		int n1 	= t->GetBranch("flag_bad_pulse")->GetEntries();
 		int n2 	= t->GetBranch("flag_injected_pulse")->GetEntries();
 		int n3 	= t->GetBranch("cal_ipos_ztc")->GetEntries();
 		int n4 	= t->GetBranch("cal_cpg_diff_AoE")->GetEntries();
-
-		cout<< "CCC" << endl;
-
 
 		if(!(n1 == n2 && n2 == n3 && n3 == n4)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
 		{
@@ -193,6 +194,14 @@ void MP()
 			}
 			
 		}
+		delete t;
+		delete f;
+
+		delete e;
+		delete ztc;
+		delete aoe;
+		delete fip;
+		delete fbp;
 	}
 
 	h->Draw();
