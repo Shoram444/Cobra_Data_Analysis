@@ -75,6 +75,9 @@ vector<string>* ListFiles(string _path, string _key)
 
 vector<paths> ReadFiles()
 {
+	string folds;
+	string fls;
+
 	vector<paths> files_read;
 	string d;			// request for path in the console. 
     cout<< "Please specify the path to Data directory: ";
@@ -83,6 +86,14 @@ vector<paths> ReadFiles()
     string key;
     cout<< "Please specify Year of desired data (Use \"20\" for all years): ";
     cin >> key;
+
+	cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
+	cin >> folds;
+	
+	cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
+	cin >> fls;
+
+
 
 	vector<string>* years;
 	vector<string>* folders;
@@ -94,32 +105,34 @@ vector<paths> ReadFiles()
 
 	for (int j = 0; j<years->size(); j++)
 	{
-		if(j == 0 )
-		{
-		    cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
-    		cin >> key;
-		}
+		// if(j == 0 )
+		// {
+		//     cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
+  //   		cin >> folds;
+		// }
 
-		folders = ListFiles(d+"/"+years->at(j), key);
+		folders = ListFiles(d + "/" + years->at(j), folds);
 
 		for(int i = 0; i < folders->size();i++) //files.size()
 		{
-			if(i == 0 )
-			{
-			    cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
-    			cin >> key;
-			}
+			// cout << years->at(j) << endl;
+			// if(i == 0 )
+			// {
+			//     cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
+   //  			cin >> fls;
+			// }
 
-			files = ListFiles(d + "/" + years->at(j) + "/" + folders->at(i) , key);
+			files = ListFiles(d + "/" + years->at(j) + "/" + folders->at(i) , fls);
 
 			for (int k = 0; k < files->size(); k++)
 			{
 				r->directory	= d;
-
 				r->year 		= years->at(j);
 				r->folder 		= folders->at(i);
 				r->file 		= files->at(k);
 
+				// cout<< d 					<< "/" << years->at(j) << "/" ;
+				// cout<< folders->at(i)	 	<< "/" << files->at(k) << endl;
 				files_read.push_back(*r);
 			}
 		}
@@ -133,26 +146,52 @@ void MP()
 	vector<paths>  root_file_path;
 	root_file_path = ReadFiles();
 	
-	TH1F* h = new TH1F("h", "hh", 1500, 0.0, 3000.0);
-	// TH1F* h[6];
-	// for(int y = 0; y < 7; y++)
-	// {
-	// 	char* c_year;
-	// 	c_year = str_to_char(root_file_path.at(0).year);
+	TH1F* h = new TH1F("h", "All Years", 1500, 0.0, 3000.0);
+	TH1F* g[6];
+	TCanvas* c[6];
 
-	// 	h[y] = new TH1F("h", c_year, 200, 0.0, 2000.0);
-	// }	
+	int i = 2013;
 
-	cout << "========== Files Read! ==============" <<endl;
+	for(int y = 0; y < 7; y++)
+	{
+		stringstream s_title;					
+		s_title  <<  "E_" << i;
+		string strname  = s_title.str();
+
+		g[y] = new TH1F(strname.c_str(), strname.c_str(), 1500, 0.0, 3000.0);
+
+	   g[y]->SetLineWidth(2);
+	   g[y]->GetXaxis()->SetTitle("Energy [keV]");
+	   g[y]->GetXaxis()->SetRange(1,1500);
+	   g[y]->GetXaxis()->SetLabelFont(42);
+	   g[y]->GetXaxis()->SetLabelSize(0.035);
+	   g[y]->GetXaxis()->SetTitleSize(0.035);
+	   g[y]->GetXaxis()->SetTitleOffset(1);
+	   g[y]->GetXaxis()->SetTitleFont(42);
+	   g[y]->GetYaxis()->SetTitle("Counts [#]");
+	   g[y]->GetYaxis()->SetLabelFont(42);
+	   g[y]->GetYaxis()->SetLabelSize(0.035);
+	   g[y]->GetYaxis()->SetTitleSize(0.035);
+	   g[y]->GetYaxis()->SetTitleFont(42);
+	   g[y]->GetZaxis()->SetLabelFont(42);
+	   g[y]->GetZaxis()->SetLabelSize(0.035);
+	   g[y]->GetZaxis()->SetTitleSize(0.035);
+	   g[y]->GetZaxis()->SetTitleOffset(1);
+	   g[y]->GetZaxis()->SetTitleFont(42);
+
+		i++;
+	}	
+
 	
-
 	for(int i = 0; i < root_file_path.size(); i++)
 	{
 		char* root_file;
 
 		root_file = str_to_char(root_file_path.at(i).directory + "/" + root_file_path.at(i).year + "/" + root_file_path.at(i).folder + "/" + root_file_path.at(i).file );
 
-		cout<< root_file << endl;
+		if(i%1000 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Read" << endl;}
+
+		// cout<< root_file << endl;
 
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
@@ -190,30 +229,59 @@ void MP()
 			return;
 		}
 
-		for(int i = 0; i < n1 ; i++)
+		for(int j = 0; j < n1 ; j++)
 		{
-			t->GetEntry(i);
+			t->GetEntry(j);
 
-			for(int j = 0; j < ztc->size(); j++)
+			for(int k = 0; k < ztc->size(); k++)
 			{
-				TTimeStamp* tts = new TTimeStamp(tim->at(j));
-				TTimeStamp* maxTime = new TTimeStamp( 2013 , 11 , 25 , 8 , 35 , 0 , 0);
-				TTimeStamp* minTime = new TTimeStamp( 2013 , 11 , 25 , 5 , 35 , 0 , 0);
-
+				TTimeStamp* tts = new TTimeStamp(tim->at(k));
+				// cout<< tts->GetDate()/10000 << endl;
+				// TTimeStamp* maxTime = new TTimeStamp();
+				// TTimeStamp* minTime = new TTimeStamp();
 				if(   													//apply cuts
-					 !(fip->at(j)) 									&&
-					 !(fbp->at(j)) 									&&
-					  (ztc->at(j) > 0.2 	&& ztc->at(j) < 0.95) 	&&
-					  (aoe->at(j) > 0.872 	&& aoe->at(j) < 1.2 )   &&
-					  (tts->AsDouble() < maxTime->AsDouble())		&&
-					  (tts->AsDouble() > minTime->AsDouble())
-				   )
+					 !(fip->at(k)) 									&&
+					 !(fbp->at(k)) 									&&
+					  (ztc->at(k) > 0.2 	&& ztc->at(k) < 0.95) 	&&
+					  (aoe->at(k) > 0.872 	&& aoe->at(k) < 1.2 )   
+				   )					  // (tts->AsDouble() < maxTime->AsDouble())		&&  // (tts->AsDouble() > minTime->AsDouble())
 				{
-
-
-					cout<< "Time of event: " << tim->at(j) << " ======== "  ;
-					tts->Print() ;
-					h->Fill(ene->at(j));
+					
+					switch(tts->GetDate()/10000)
+					{
+						case 2013: g[0]->Fill(ene->at(k));
+							       break;
+						case 2014: g[1]->Fill(ene->at(k));
+								   break;
+						case 2015:
+						{
+							g[2]->Fill(ene->at(k));
+							break;
+						}		
+						case 2016:
+						{
+							g[3]->Fill(ene->at(k));
+							break;
+						}		
+						case 2017:
+						{
+							g[4]->Fill(ene->at(k));
+							break;
+						}		
+						case 2018:
+						{
+							g[5]->Fill(ene->at(k));
+							break;
+						}	
+						case 2019:
+						{
+							g[6]->Fill(ene->at(k));
+							break;
+						}			
+					}
+					// cout<< "Time of event: " << tim->at(k) << " ======== "  ;
+					// tts->Print() ;
+					h->Fill(ene->at(k));
 				}
 				
 				delete tts;
@@ -229,15 +297,19 @@ void MP()
 		delete fip;
 		delete fbp;
 		
-		h->Draw();
-
 	}
 
-<<<<<<< HEAD
-=======
-	h->Draw();
->>>>>>> Develop
-	// TFile* year_hist = new TFile("histogram_years.root", "NEW");
-	// h->Write();
+	// h->Draw();
+
+	TFile* year_hist = new TFile("histogram.root", "RECREATE");
+	// g[0]->Draw();
+
+	g[0]->Write();
+	g[1]->Write();
+	g[2]->Write();
+	g[3]->Write();
+	g[4]->Write();
+	g[5]->Write();
+	g[6]->Write();
 
 }
