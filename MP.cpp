@@ -25,6 +25,7 @@ char* str_to_char(string _str)
 	return _char;
 }
 
+
 struct paths
 {
 	string 		directory;
@@ -132,13 +133,26 @@ void MP()
 	vector<paths>  root_file_path;
 	root_file_path = ReadFiles();
 	
-	TH1F* h	 = new TH1F("h", "title", 200, 0.0, 2000.0);
+	TH1F* h = new TH1F("h", "hh", 1500, 0.0, 3000.0);
+	// TH1F* h[6];
+	// for(int y = 0; y < 7; y++)
+	// {
+	// 	char* c_year;
+	// 	c_year = str_to_char(root_file_path.at(0).year);
+
+	// 	h[y] = new TH1F("h", c_year, 200, 0.0, 2000.0);
+	// }	
+
+	cout << "========== Files Read! ==============" <<endl;
+	
 
 	for(int i = 0; i < root_file_path.size(); i++)
 	{
 		char* root_file;
 
 		root_file = str_to_char(root_file_path.at(i).directory + "/" + root_file_path.at(i).year + "/" + root_file_path.at(i).folder + "/" + root_file_path.at(i).file );
+
+		cout<< root_file << endl;
 
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
@@ -199,10 +213,12 @@ void MP()
 		delete aoe;
 		delete fip;
 		delete fbp;
+		
+		h->Draw();
+
 	}
 
-	h->Draw();
-	TFile* year_hist = new TFile("histogram_years.root", "NEW");
-	h->Write();
+	// TFile* year_hist = new TFile("histogram_years.root", "NEW");
+	// h->Write();
 
 }
