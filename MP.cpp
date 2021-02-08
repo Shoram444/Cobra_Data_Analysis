@@ -144,30 +144,34 @@ void MP()
 		TTree* t = (TTree*) f->Get("merged_cal");
 
 
-		vector<double>* e	= new vector<double>();
+		vector<double>* ene	= new vector<double>();
 		vector<double>* ztc	= new vector<double>();
 		vector<double>* aoe	= new vector<double>();
 		vector<bool>*	fip	= new vector<bool>();
 		vector<bool>*	fbp	= new vector<bool>();
+		vector<double>*	tim	= new vector<double>();
 
-		t->SetBranchAddress("cal_edep", &e);
+		t->SetBranchAddress("cal_edep", &ene);
 		t->SetBranchAddress("flag_injected_pulse", &fip);
 		t->SetBranchAddress("flag_bad_pulse", &fbp);
 		t->SetBranchAddress("cal_ipos_ztc", &ztc);
 		t->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
+		t->SetBranchAddress("info_systime", &tim);
 
 		int n1 	= t->GetBranch("flag_bad_pulse")->GetEntries();
 		int n2 	= t->GetBranch("flag_injected_pulse")->GetEntries();
 		int n3 	= t->GetBranch("cal_ipos_ztc")->GetEntries();
 		int n4 	= t->GetBranch("cal_cpg_diff_AoE")->GetEntries();
+		int n5 	= t->GetBranch("info_systime")->GetEntries();
 
-		if(!(n1 == n2 && n2 == n3 && n3 == n4)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
+		if(!(n1 == n2 && n2 == n3 && n3 == n4  && n4 == n5)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
 		{
 			cout << "ERROR: The leaves in this tree are not of the same size!" << endl;
 			cout << "Size of flag_bad_pulse = " 		<< n1				   << endl;
 			cout << "Size of flag_injected_pulse = " 	<< n2				   << endl; 
 			cout << "Size of cal_ipos_ztc = " 			<< n3				   << endl; 
 			cout << "Size of cal_cpg_diff_AoE = " 		<< n4				   << endl; 
+			cout << "Size of info_systime = " 			<< n5				   << endl; 
 
 			return;
 		}
@@ -178,23 +182,34 @@ void MP()
 
 			for(int j = 0; j < ztc->size(); j++)
 			{
+				TTimeStamp* tts = new TTimeStamp(tim->at(j));
+				TTimeStamp* maxTime = new TTimeStamp( 2013 , 11 , 25 , 8 , 35 , 0 , 0);
+				TTimeStamp* minTime = new TTimeStamp( 2013 , 11 , 25 , 5 , 35 , 0 , 0);
+
 				if(   													//apply cuts
 					 !(fip->at(j)) 									&&
 					 !(fbp->at(j)) 									&&
 					  (ztc->at(j) > 0.2 	&& ztc->at(j) < 0.95) 	&&
-					  (aoe->at(j) > 0.872 	&& aoe->at(j) < 1.2 )
+					  (aoe->at(j) > 0.872 	&& aoe->at(j) < 1.2 )   &&
+					  (tts->AsDouble() < maxTime->AsDouble())		&&
+					  (tts->AsDouble() > minTime->AsDouble())
 				   )
 				{
-					h->Fill(e->at(j));
-				}
 
+
+					cout<< "Time of event: " << tim->at(j) << " ======== "  ;
+					tts->Print() ;
+					h->Fill(ene->at(j));
+				}
+				
+				delete tts;
 			}
 			
 		}
 		delete t;
 		delete f;
 
-		delete e;
+		delete ene;
 		delete ztc;
 		delete aoe;
 		delete fip;
@@ -202,7 +217,7 @@ void MP()
 	}
 
 	h->Draw();
-	TFile* year_hist = new TFile("histogram_years.root", "NEW");
-	h->Write();
+	// TFile* year_hist = new TFile("histogram_years.root", "NEW");
+	// h->Write();
 
 }
