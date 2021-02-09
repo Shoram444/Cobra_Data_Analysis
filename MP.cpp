@@ -13,18 +13,17 @@
 
 using namespace std;
 
-// vector<string> files;
+const int n_of_hist =  7;
 
 char* str_to_char(string _str)
 {
-	int n = _str.length();
+	int 	n 	= _str.length();
 	char* _char = new char[n+1];
 
     strcpy(_char, _str.c_str());
-
+	
 	return _char;
 }
-
 
 struct paths
 {
@@ -32,157 +31,149 @@ struct paths
 	string 		year;
 	string 		folder;
 	string 		file;
-
 };
 
 vector<string>* ListFiles(string _path, string _key)
 {
 	vector<string> *file_list = new vector<string>();
+
 	DIR 		   *di;
-	struct 	dirent *dir;
+	struct dirent *dir;
+	char* 		c_path; //conversion of string to char. opendir function takes only char. 
 
-	char* 		 c_path; //conversion of string to char. opendir function takes only char. 
-	c_path = str_to_char(_path);
-
-	di = opendir(c_path);
+	c_path 	= str_to_char(_path);
+	di 		= opendir(c_path);
 
 	if (di)
     {
         while ((dir = readdir(di)) != NULL)
         {
-            stringstream ss;					//backward conversion of char to string.
-    		ss  <<  dir->d_name;
-    		string strname  = ss.str();
+            stringstream 			  dir_name;		//backward conversion of char to string.
+    		dir_name  	  		<< dir->d_name;
+    		string strname  = 	dir_name.str();
+
     		if(strname == ".." || strname==".")
     		{
     			continue;
     		}
 
-            std::size_t found = strname.find(_key);			//checking if "key" is present in the string. For Years, the key si 20, for folders - cpg, for root files it's .root. 
-		  	if (found!=std::string::npos)
-		    	{
-		    		file_list->push_back(dir->d_name);
-				}
+            size_t found = strname.find(_key);	 //checking if "years_ksey" is present in the string. 
+		  	if (found!=std::string::npos){file_list->push_back(dir->d_name);}
         }
         closedir(di);
     }
-    else {
+    else 
+    {
         perror ("Failed to read dictionaries! Check whether the folders are correctly named!");
         return file_list;
     }
+
     return file_list;
 } 
 
 vector<paths> ReadFiles()
 {
-	string folds;
-	string fls;
+    string 		years_key;
+	string 	  folders_key;
+	string 		files_key;
+	string 	   parent_dir;			// request for path in the console.
 
 	vector<paths> files_read;
-	string d;			// request for path in the console. 
-    cout<< "Please specify the path to Data directory: ";
-    cin >> d;
 
-    string key;
+	vector<string>*   years;
+	vector<string>* folders;
+	vector<string>*   files;
+
+	struct paths *r  = new struct paths; 
+
+    cout<< "Please specify the path to Data parent directory: ";
+    cin >> parent_dir;
+
     cout<< "Please specify Year of desired data (Use \"20\" for all years): ";
-    cin >> key;
+    cin >> years_key;
 
 	cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
-	cin >> folds;
+	cin >> folders_key;
 	
 	cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
-	cin >> fls;
+	cin >> files_key;
 
-
-
-	vector<string>* years;
-	vector<string>* folders;
-	vector<string>* files;
-
-	struct paths *r 	= new struct paths; 
-
-	years = ListFiles(d, key);
+	years = ListFiles(parent_dir, years_key);
 
 	for (int j = 0; j<years->size(); j++)
 	{
-		// if(j == 0 )
-		// {
-		//     cout<< "Please specify keyword for which folders to scan (Use \"cpg\" for all years): ";
-  //   		cin >> folds;
-		// }
+		folders = ListFiles(parent_dir + "/" + years->at(j), folders_key);
 
-		folders = ListFiles(d + "/" + years->at(j), folds);
-
-		for(int i = 0; i < folders->size();i++) //files.size()
+		for(int i = 0; i < folders->size();i++) 
 		{
-			// cout << years->at(j) << endl;
-			// if(i == 0 )
-			// {
-			//     cout<< "Please specify keyword for which files to scan (Use \".root\" for all years): ";
-   //  			cin >> fls;
-			// }
-
-			files = ListFiles(d + "/" + years->at(j) + "/" + folders->at(i) , fls);
+			files = ListFiles(parent_dir + "/" + years->at(j) + "/" + folders->at(i) , files_key);
 
 			for (int k = 0; k < files->size(); k++)
 			{
-				r->directory	= d;
-				r->year 		= years->at(j);
+				r->directory	=     parent_dir;
+				r->year 		=   years->at(j);
 				r->folder 		= folders->at(i);
-				r->file 		= files->at(k);
+				r->file 		=   files->at(k);
 
-				// cout<< d 					<< "/" << years->at(j) << "/" ;
-				// cout<< folders->at(i)	 	<< "/" << files->at(k) << endl;
 				files_read.push_back(*r);
 			}
 		}
 	}
+
 	return files_read;
 }
 
+TH1F* hist_style(string _title)
+{
+	TH1F* _h = new TH1F(_title.c_str(), _title.c_str(), 1500, 0.0, 3000.0);
+	
+	_h->SetLineWidth(2);
+    _h->GetXaxis()->SetTitle("Energy [keV]");
+    _h->GetXaxis()->SetRange(1,1500);
+    _h->GetXaxis()->SetLabelFont(42);
+    _h->GetXaxis()->SetLabelSize(0.035);
+    _h->GetXaxis()->SetTitleSize(0.035);
+    _h->GetXaxis()->SetTitleOffset(1);
+    _h->GetXaxis()->SetTitleFont(42);
+    _h->GetYaxis()->SetTitle("Counts [#]");
+    _h->GetYaxis()->SetLabelFont(42);
+    _h->GetYaxis()->SetLabelSize(0.035);
+    _h->GetYaxis()->SetTitleSize(0.035);
+    _h->GetYaxis()->SetTitleFont(42);
+    _h->GetZaxis()->SetLabelFont(42);
+    _h->GetZaxis()->SetLabelSize(0.035);
+    _h->GetZaxis()->SetTitleSize(0.035);
+    _h->GetZaxis()->SetTitleOffset(1);
+    _h->GetZaxis()->SetTitleFont(42);
+
+    return _h;
+}
 
 void MP() 
 { 
-	vector<paths>  root_file_path;
-	root_file_path = ReadFiles();
+	vector<paths>  	 root_file_path; //initialize vector to hold paths for each root file
+	root_file_path = 	ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
 	
-	TH1F* h = new TH1F("h", "All Years", 1500, 0.0, 3000.0);
-	TH1F* g[6];
-	TCanvas* c[6];
+	TH1F* 		h[n_of_hist];
+	TCanvas* 	c[n_of_hist];
 
-	int i = 2013;
-
-	for(int y = 0; y < 7; y++)
+	int year_for_title = 2013;
+	for(int y = 0; y < n_of_hist; y++)
 	{
-		stringstream s_title;					
-		s_title  <<  "E_" << i;
-		string strname  = s_title.str();
+		stringstream 			 	   h_title;			//names for histograms		
+		h_title  <<  "h_" <<   	year_for_title;
+		string h_tit_str  = 	 h_title.str();
 
-		g[y] = new TH1F(strname.c_str(), strname.c_str(), 1500, 0.0, 3000.0);
+		stringstream 				   c_title;			//names for canvases
+		c_title  <<  "c_" <<    year_for_title;
+		string c_tit_str  = 	 c_title.str();	
 
-	   g[y]->SetLineWidth(2);
-	   g[y]->GetXaxis()->SetTitle("Energy [keV]");
-	   g[y]->GetXaxis()->SetRange(1,1500);
-	   g[y]->GetXaxis()->SetLabelFont(42);
-	   g[y]->GetXaxis()->SetLabelSize(0.035);
-	   g[y]->GetXaxis()->SetTitleSize(0.035);
-	   g[y]->GetXaxis()->SetTitleOffset(1);
-	   g[y]->GetXaxis()->SetTitleFont(42);
-	   g[y]->GetYaxis()->SetTitle("Counts [#]");
-	   g[y]->GetYaxis()->SetLabelFont(42);
-	   g[y]->GetYaxis()->SetLabelSize(0.035);
-	   g[y]->GetYaxis()->SetTitleSize(0.035);
-	   g[y]->GetYaxis()->SetTitleFont(42);
-	   g[y]->GetZaxis()->SetLabelFont(42);
-	   g[y]->GetZaxis()->SetLabelSize(0.035);
-	   g[y]->GetZaxis()->SetTitleSize(0.035);
-	   g[y]->GetZaxis()->SetTitleOffset(1);
-	   g[y]->GetZaxis()->SetTitleFont(42);
+		h[y] = hist_style(h_tit_str);
+		c[y] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
 
-		i++;
+		year_for_title++;
 	}	
 
-	
 	for(int i = 0; i < root_file_path.size(); i++)
 	{
 		char* root_file;
@@ -191,11 +182,8 @@ void MP()
 
 		if(i%1000 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Read" << endl;}
 
-		// cout<< root_file << endl;
-
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
-
 
 		vector<double>* ene	= new vector<double>();
 		vector<double>* ztc	= new vector<double>();
@@ -236,80 +224,51 @@ void MP()
 			for(int k = 0; k < ztc->size(); k++)
 			{
 				TTimeStamp* tts = new TTimeStamp(tim->at(k));
-				// cout<< tts->GetDate()/10000 << endl;
-				// TTimeStamp* maxTime = new TTimeStamp();
-				// TTimeStamp* minTime = new TTimeStamp();
+
 				if(   													//apply cuts
 					 !(fip->at(k)) 									&&
 					 !(fbp->at(k)) 									&&
 					  (ztc->at(k) > 0.2 	&& ztc->at(k) < 0.95) 	&&
 					  (aoe->at(k) > 0.872 	&& aoe->at(k) < 1.2 )   
-				   )					  // (tts->AsDouble() < maxTime->AsDouble())		&&  // (tts->AsDouble() > minTime->AsDouble())
+				   )					  
 				{
-					
-					switch(tts->GetDate()/10000)
+					switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
 					{
-						case 2013: g[0]->Fill(ene->at(k));
+						case 2013: h[0]->Fill(ene->at(k));
 							       break;
-						case 2014: g[1]->Fill(ene->at(k));
+						case 2014: h[1]->Fill(ene->at(k));
 								   break;
-						case 2015:
-						{
-							g[2]->Fill(ene->at(k));
-							break;
-						}		
-						case 2016:
-						{
-							g[3]->Fill(ene->at(k));
-							break;
-						}		
-						case 2017:
-						{
-							g[4]->Fill(ene->at(k));
-							break;
-						}		
-						case 2018:
-						{
-							g[5]->Fill(ene->at(k));
-							break;
-						}	
-						case 2019:
-						{
-							g[6]->Fill(ene->at(k));
-							break;
-						}			
+						case 2015: h[2]->Fill(ene->at(k));
+								   break;
+						case 2016: h[3]->Fill(ene->at(k));
+							       break;
+						case 2017: h[4]->Fill(ene->at(k));
+								   break;
+						case 2018: h[5]->Fill(ene->at(k));
+								   break;
+						case 2019: h[6]->Fill(ene->at(k));
+								   break;
 					}
-					// cout<< "Time of event: " << tim->at(k) << " ======== "  ;
-					// tts->Print() ;
-					h->Fill(ene->at(k));
 				}
-				
 				delete tts;
 			}
-			
 		}
 		delete t;
 		delete f;
-
 		delete ene;
 		delete ztc;
 		delete aoe;
 		delete fip;
 		delete fbp;
-		
 	}
 
-	// h->Draw();
-
-	TFile* year_hist = new TFile("histogram.root", "RECREATE");
-	// g[0]->Draw();
-
-	g[0]->Write();
-	g[1]->Write();
-	g[2]->Write();
-	g[3]->Write();
-	g[4]->Write();
-	g[5]->Write();
-	g[6]->Write();
+	TFile* tf = new TFile("Processed_data.root", "RECREATE");
+	for (int d = 0; d < 7; d++)
+	{
+		// c[d]->cd();
+		// h[d]->Draw();
+		h[d]->Write();
+	}
+	delete tf;
 
 }
