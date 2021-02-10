@@ -26,6 +26,8 @@ void Plot_Spectra()
 	TCanvas* 	c 	= new TCanvas("c", "Energy", 1000, 600);
 	THStack* 	hs  = new THStack("Histograms","Deposited Energy; Energy[keV]; Counts[#]");
 	TFile* 		tf  = new TFile("Processed_data.root");
+	TCanvas* 	ct 	= new TCanvas("ct", "Tot_Energy", 1000, 600);
+
 
 	int year_for_title = 2013;
 	for(int y = 0; y < n_of_hist; y++)
@@ -60,5 +62,10 @@ void Plot_Spectra()
 	hs->Draw("nostack");
 	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
 
-	c->SaveAs("plots.png");
+	ct->cd();
+	tot->Draw();
+
+	ct->SaveAs("Total_spectrum_without_flush.png");
+  gROOT->ProcessLine(".q");
+	
 }
