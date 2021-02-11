@@ -1,0 +1,154 @@
+#global time exclusion cuts: 2020-02-21
+time.glob.excl.1.low: 1386505315.2
+time.glob.excl.1.high: 1387023665.3
+
+time.glob.excl.2.low: 1388146725.6
+time.glob.excl.2.high: 1389183415.9
+
+time.glob.excl.3.low: 1391904691.8
+time.glob.excl.3.high: 1392163871.8
+
+time.glob.excl.4.low: 1393330127.2
+time.glob.excl.4.high: 1393502917.2
+
+time.glob.excl.5.low: 1402055519.8
+time.glob.excl.5.high: 1402357894.9
+
+time.glob.excl.6.low: 1404474440.5
+time.glob.excl.6.high: 1404776815.6
+
+time.glob.excl.7.low: 1410176182.2
+time.glob.excl.7.high: 1410348972.3
+
+time.glob.excl.8.low: 1419031159.9
+time.glob.excl.8.high: 1419333534.9
+
+time.glob.excl.9.low: 1428188502.6
+time.glob.excl.9.high: 1428490877.7
+
+time.glob.excl.10.low: 1430607423.3
+time.glob.excl.10.high: 1430780213.4
+
+time.glob.excl.11.low: 1431428128.6
+time.glob.excl.11.high: 1431773698.7
+
+time.glob.excl.12.low: 1432378418.9
+time.glob.excl.12.high: 1432594403.9
+
+time.glob.excl.13.low: 1433242319.1
+time.glob.excl.13.high: 1433458304.2
+
+time.glob.excl.14.low: 1434019829.4
+time.glob.excl.14.high: 1434451789.5
+
+time.glob.excl.15.low: 1435704434.9
+time.glob.excl.15.high: 1435963614.9
+
+time.glob.excl.16.low: 1436525140.1
+time.glob.excl.16.high: 1436870710.2
+
+time.glob.excl.17.low: 1437475430.4
+time.glob.excl.17.high: 1437821000.5
+
+time.glob.excl.18.low: 1438900865.8
+time.glob.excl.18.high: 1439289630.9
+
+time.glob.excl.19.low: 1440412691.3
+time.glob.excl.19.high: 1440628676.3
+
+time.glob.excl.20.low: 1441103811.5
+time.glob.excl.20.high: 1441449381.5
+
+time.glob.excl.21.low: 1441881321.7
+time.glob.excl.21.high: 1442054111.7
+
+time.glob.excl.22.low: 1442529246.9
+time.glob.excl.22.high: 1442831622.0
+
+time.glob.excl.23.low: 1443177172.1
+time.glob.excl.23.high: 1443522742.2
+
+time.glob.excl.24.low: 1446373603.0
+time.glob.excl.24.high: 1447885438.5
+
+time.glob.excl.25.low: 1450649909.3
+time.glob.excl.25.high: 1450822699.4
+
+time.glob.excl.26.low: 1451168249.5
+time.glob.excl.26.high: 1452809669.9
+
+time.glob.excl.27.low: 1452809660.0
+time.glob.excl.27.high: 1455099005.6
+
+time.glob.excl.28.low: 1455098995.7
+time.glob.excl.28.high: 1455746930.8
+
+time.glob.excl.29.low: 1457906671.5
+time.glob.excl.29.high: 1458338631.6
+
+time.glob.excl.30.low: 1460800737.4
+time.glob.excl.30.high: 1462226182.8
+
+time.glob.excl.31.low: 1462485342.9
+time.glob.excl.31.high: 1463046888.0
+
+time.glob.excl.32.low: 1463219658.1
+time.glob.excl.32.high: 1463522033.1
+
+time.glob.excl.33.low: 1464040363.3
+time.glob.excl.33.high: 1465854563.8
+
+time.glob.excl.34.low: 1505162015.6
+time.glob.excl.34.high: 1505464390.7
+
+time.glob.excl.35.low: 1505593965.7
+time.glob.excl.35.high: 1505766755.8
+
+time.glob.excl.36.low: 1505766745.8
+time.glob.excl.36.high: 1506371485.9
+
+time.glob.excl.37.low: 1507494546.3
+time.glob.excl.37.high: 1507796921.4
+
+time.glob.excl.38.low: 1512893922.9
+time.glob.excl.38.high: 1513498663.1
+
+time.glob.excl.39.low: 1514708113.5
+time.glob.excl.39.high: 1515442438.7
+
+time.glob.excl.40.low: 1559587731.9
+time.glob.excl.40.high: 1559803716.9
+
+time.glob.excl.41.low: 1560797192.2
+time.glob.excl.41.high: 1561013177.3
+
+time.glob.excl.42.low: 1564857523.4
+time.glob.excl.42.high: 1565030313.5
+
+#single detector time cuts: 2020-02-21
+#Det14
+time.det.14.1.low: 1564857523.4
+time.det.14.1.high: 1565203093.5
+
+time.det.14.2.low: 1565332668.6
+time.det.14.2.high: 1565591848.6
+
+time.det.14.3.low: 1565591838.7
+time.det.14.3.high: 1565721433.7
+
+time.det.14.4.low: 1565721423.7
+time.det.14.4.high: 1566023798.8
+
+time.det.14.5.low: 1566628519.0
+time.det.14.5.high: 1566758114.0
+
+time.det.14.6.low: 1567060469.1
+time.det.14.6.high: 1567233259.1
+
+#Det47
+time.det.47.1.low: 1385727804.9
+time.det.47.1.high: 1385814204.9
+
+#remove L3 during 3-layer period until L4 installation due to initial HV problems
+time.layer.3.excl.1.low: 1373308873.0
+time.layer.3.excl.1.high: 1373308873.0
