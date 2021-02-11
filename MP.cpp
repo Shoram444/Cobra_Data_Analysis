@@ -235,41 +235,17 @@ vector<paths> ReadFiles()
 
 TH1F* hist_style(string _title)
 {
-	TH1F* _h = new TH1F(_title.c_str(), _title.c_str(), 1500, 0.0, 3000.0);
+	TH1F* _h = new TH1F(_title.c_str(), _title.c_str(), 5000, 0.0, 10000.0);
 	
 	_h->SetLineWidth(2);
     _h->GetXaxis()->SetTitle("Energy [keV]");
-    _h->GetXaxis()->SetRange(1,1500);
-    _h->GetXaxis()->SetLabelFont(42);
-    _h->GetXaxis()->SetLabelSize(0.035);
-    _h->GetXaxis()->SetTitleSize(0.035);
-    _h->GetXaxis()->SetTitleOffset(1);
-    _h->GetXaxis()->SetTitleFont(42);
-    _h->GetYaxis()->SetTitle("Counts [#/2keV]");
-    _h->GetYaxis()->SetLabelFont(42);
-    _h->GetYaxis()->SetLabelSize(0.035);
-    _h->GetYaxis()->SetTitleSize(0.035);
-    _h->GetYaxis()->SetTitleFont(42);
-    _h->GetZaxis()->SetLabelFont(42);
-    _h->GetZaxis()->SetLabelSize(0.035);
-    _h->GetZaxis()->SetTitleSize(0.035);
-    _h->GetZaxis()->SetTitleOffset(1);
-    _h->GetZaxis()->SetTitleFont(42);
+    _h->GetYaxis()->SetTitle("Counts [ # /2keV]");
 
     return _h;
 }
 
 void MP() 
 { 
-	// int  = 10000;
-	vector<bool>* 		b_fip = new vector<bool>();			//true if the pulse was not injected. 
-	vector<bool>* 		b_fbp = new vector<bool>();			//true if the pulse was not bad.
-	vector<bool>* 		b_ztc = new vector<bool>();			//true if the event passed z criterion.
-	vector<bool>* 		b_aoe = new vector<bool>();			//true if the event passed aoe crit.
-	vector<bool>* 		b_fsh = new vector<bool>();			//true if the event is outside flushing period.
-	vector<double>* 	d_ene = new vector<double>();	
-	vector<TTimeStamp>* t_tim = new vector<TTimeStamp>();   //Vector that holds TTimestamp type for each hit
-
 
 
 	vector<paths>  	 root_file_path; //initialize vector to hold paths for each root file
@@ -279,7 +255,7 @@ void MP()
 	TCanvas* 	c[n_of_hist];
 
 	int year_for_title = 2013;
-	for(int y = 0; y < n_of_hist; y++)
+	for(unsigned int y = 0; y < n_of_hist; y++)
 	{
 		stringstream 			 	   h_title;			//names for histograms		
 		h_title  <<  "h_" <<   	year_for_title;
@@ -307,7 +283,16 @@ void MP()
 	if (layer ) {vTime_layer  = read_times_from_rootrc("merged_time_cuts.rootrc", "layer" ); }
 	if (Det   ) {vTime_det    = read_times_from_rootrc("merged_time_cuts.rootrc", "det"   ); }
 
-	for(int i = 0; i < root_file_path.size(); i++)
+	vector<bool>* 		b_fip = new vector<bool>(100000);			//true if the pulse was not injected. 
+	vector<bool>* 		b_fbp = new vector<bool>(100000);			//true if the pulse was not bad.
+	vector<bool>* 		b_ztc = new vector<bool>(100000);			//true if the event passed z criterion.
+	vector<bool>* 		b_aoe = new vector<bool>(100000);			//true if the event passed aoe crit.
+	vector<bool>* 		b_fsh = new vector<bool>(100000);			//true if the event is outside flushing period.
+	vector<double>* 	d_ene = new vector<double>(100000);	
+	vector<TTimeStamp>* t_tim = new vector<TTimeStamp>(100000);   //Vector that holds TTimestamp type for each hit
+	TTimeStamp tts;
+
+	for(unsigned int i = 0; i < root_file_path.size(); i++)
 	{
 		char* root_file;
 
@@ -363,17 +348,14 @@ void MP()
 			return;
 		}
 		
-			
-		for(int j = 0; j < n1 ; j++)
+		for(unsigned int j = 0; j < n1 ; j++)
 		{
 			t->GetEntry(j);
 
-
-
-			for(int k = 0; k < ene->size(); k++)
+			for(unsigned int k = 0; k < ene->size(); k++)
 			{
-				TTimeStamp* tts = new TTimeStamp(tim->at(k));
-				t_tim->push_back(*tts);
+				tts = tim->at(k);
+				t_tim->push_back(tts);
 				d_ene->push_back(ene->at(k));
 				b_fsh->push_back(true);
 				
@@ -415,7 +397,7 @@ void MP()
 				}
 				else
 				{
-					b_aoe->push_back(true);
+					b_aoe->push_back(true); 
 				}
 				
 				for(unsigned int l=0; l<vTime_global.size(); l++)
@@ -438,6 +420,7 @@ void MP()
 						b_fsh->back() = false;
 					} 
 	            }
+
 				for(unsigned int l=0; l<vTime_det.size(); l++)
 				{ 
 					if( (tim->at(k) > vTime_det[l][0]  && 
@@ -482,7 +465,6 @@ void MP()
 				// 		}
 				// 	// g->Fill(ene->at(k));
 				// }
-				delete tts;
 			}
 		}
 		delete t;
@@ -493,13 +475,7 @@ void MP()
 		delete fip;
 		delete fbp;
 	}
-	
-	// TFile* tf = new TFile("full_spec.root", "RECREATE");
 
-	// g->Draw();
-	// cc->Write();
-
-	// delete tf;
 	for(int i = 0; i < d_ene->size(); i++)
 	{
 		if(b_fsh->at(i) &&
@@ -509,23 +485,22 @@ void MP()
 		   b_aoe->at(i)   ) //all cuts passed 
 		{
 			switch(t_tim->at(i).GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
-				{
-					case 2013: h[0]->Fill(d_ene->at(i));
-						       break;
-					case 2014: h[1]->Fill(d_ene->at(i));
-							   break;
-					case 2015: h[2]->Fill(d_ene->at(i));
-							   break;
-					case 2016: h[3]->Fill(d_ene->at(i));
-						       break;
-					case 2017: h[4]->Fill(d_ene->at(i));
-							   break;
-					case 2018: h[5]->Fill(d_ene->at(i));
-							   break;
-					case 2019: h[6]->Fill(d_ene->at(i));
-							   break;
-				}
-			// g->Fill(ene->at(k));
+			{
+				case 2013: h[0]->Fill(d_ene->at(i));
+					       break;
+				case 2014: h[1]->Fill(d_ene->at(i));
+						   break;
+				case 2015: h[2]->Fill(d_ene->at(i));
+						   break;
+				case 2016: h[3]->Fill(d_ene->at(i));
+					       break;
+				case 2017: h[4]->Fill(d_ene->at(i));
+						   break;
+				case 2018: h[5]->Fill(d_ene->at(i));
+						   break;
+				case 2019: h[6]->Fill(d_ene->at(i));
+						   break;
+			}
 		}
 	}
 

@@ -25,7 +25,7 @@ void Plot_Spectra()
 
 	TCanvas* 	c 	= new TCanvas("c", "Energy", 1000, 600);
 	THStack* 	hs  = new THStack("Histograms","Deposited Energy; Energy[keV]; Counts[#]");
-	TFile* 		tf  = new TFile("Processed_data.root");
+	TFile* 		tf  = new TFile("Processed_data_w_flush.root");
 	TCanvas* 	ct 	= new TCanvas("ct", "Tot_Energy", 1000, 600);
 
 
@@ -44,6 +44,8 @@ void Plot_Spectra()
 			tot = (TH1F*) h[0]->Clone();
 			tot->SetTitle("Total");
 			tot->SetLineColor(8);
+			tot->GetYaxis()->SetTitle("Counts [# /2keV]");
+
 		}
 		else
 		{
@@ -55,17 +57,29 @@ void Plot_Spectra()
 		year_for_title++;
 	}	
 
+	c->cd();
 	hs->Add(tot);
+	hs->SetNameTitle("Deposited Energy","Deposited Energy");
 	gPad->SetGrid();
 	gPad->SetLogy();
 
 	hs->Draw("nostack");
-	gPad->BuildLegend(0.75,0.75,0.95,0.95,"");
+	hs->GetXaxis()->SetTitle("Energy [ keV ]"); 
+	hs->GetYaxis()->SetTitle("Counts [ # ]"); 
+	c->Modified();
+
+	gPad->BuildLegend(0.85,0.55,0.98,0.75,"");
 
 	ct->cd();
+	gPad->SetGrid();
+	gPad->SetLogy();
+
 	tot->Draw();
 
-	ct->SaveAs("Total_spectrum_without_flush.png");
-  gROOT->ProcessLine(".q");
-	
+	ct->SaveAs("Total_spectrum_with_flush.png");
+
+
+
+  // gROOT->ProcessLine(".q");
+
 }
