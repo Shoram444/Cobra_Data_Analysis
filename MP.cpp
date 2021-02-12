@@ -13,9 +13,13 @@
 #include <limits.h>
 #include </home/shoram/ProgramFiles/boost_1_75_0/boost/algorithm/string/find.hpp>
 #include "TSystem.h"
+#include "/home/shoram/Work/Diploma_Thesis/CO_event/include/CO_event.hh"
+
 
 using namespace boost;
 using namespace std;
+
+R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_event/lib/libCO_event.so);
 
 const int n_of_hist 		=    7;
 const bool removeBadPeriods = true;
@@ -246,8 +250,6 @@ TH1F* hist_style(string _title)
 
 void MP() 
 { 
-
-
 	vector<paths>  	 root_file_path; //initialize vector to hold paths for each root file
 	root_file_path = 	ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
 	
@@ -271,26 +273,7 @@ void MP()
 		year_for_title++;
 	}	
 
-	// TH1F* g = new TH1F("g","g", 1500, 0, 3000);
-	// TCanvas* cc = new TCanvas("cc", "cc");
-
-
-	vector<vector<double>> 	 vTime_global; 
-	vector<vector<double>> 	  vTime_layer; 
-	vector<vector<double>> 		vTime_det; 
-
-	if (global) {vTime_global = read_times_from_rootrc("merged_time_cuts.rootrc", "glob"  ); }
-	if (layer ) {vTime_layer  = read_times_from_rootrc("merged_time_cuts.rootrc", "layer" ); }
-	if (Det   ) {vTime_det    = read_times_from_rootrc("merged_time_cuts.rootrc", "det"   ); }
-
-	vector<bool>* 		b_fip = new vector<bool>(100000);			//true if the pulse was not injected. 
-	vector<bool>* 		b_fbp = new vector<bool>(100000);			//true if the pulse was not bad.
-	vector<bool>* 		b_ztc = new vector<bool>(100000);			//true if the event passed z criterion.
-	vector<bool>* 		b_aoe = new vector<bool>(100000);			//true if the event passed aoe crit.
-	vector<bool>* 		b_fsh = new vector<bool>(100000);			//true if the event is outside flushing period.
-	vector<double>* 	d_ene = new vector<double>(100000);	
-	vector<TTimeStamp>* t_tim = new vector<TTimeStamp>(100000);   //Vector that holds TTimestamp type for each hit
-	TTimeStamp tts;
+	vector<CO_event> v_eve;
 
 	for(unsigned int i = 0; i < root_file_path.size(); i++)
 	{
@@ -301,21 +284,19 @@ void MP()
 								root_file_path.at(i).folder    + "/" + 
 								root_file_path.at(i).file );
 
-		// cout<< root_file << endl;
-
-		if(i%1000 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Files Read" << endl;}
+		if(i%10 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Files Read" << endl;}
 
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
 
-		vector<double>* ene	= new vector<double>();
-		vector<double>* ztc	= new vector<double>();
-		vector<double>* aoe	= new vector<double>();
-		vector<bool>*	fip	= new vector<bool>();
-		vector<bool>*	fbp	= new vector<bool>();
-		vector<double>*	tim	= new vector<double>();
-		vector<int>*	det = new vector<int>();
-		vector<int>*	eid = new vector<int>();
+		vector<double>* 	ene = new vector<double>();
+		vector<double>* 	ztc = new vector<double>();
+		vector<double>* 	aoe = new vector<double>();
+		vector<bool>*		fip = new vector<bool>();
+		vector<bool>*		fbp = new vector<bool>();
+		vector<double>*		tim = new vector<double>();
+		vector<int>*		det = new vector<int>();
+		vector<int>*		eid = new vector<int>();
 
 		t->SetBranchAddress("cal_edep", &ene);
 		t->SetBranchAddress("cal_ipos_ztc", &ztc);
@@ -348,123 +329,33 @@ void MP()
 			return;
 		}
 		
-		for(unsigned int j = 0; j < n1 ; j++)
+
+		for(unsigned int j = 0; j < n1 ; j++) //Extracting cuts and energies from TTree
 		{
 			t->GetEntry(j);
 
 			for(unsigned int k = 0; k < ene->size(); k++)
 			{
-				tts = tim->at(k);
-				t_tim->push_back(tts);
-				d_ene->push_back(ene->at(k));
-				b_fsh->push_back(true);
-				
-				if(fip->at(k))								
-				{
-					b_fip->push_back(false);
-				}
-				else
-				{
-					b_fip->push_back(true);
-				}
-				
-
-				if(fbp->at(k))								
-				{
-					b_fbp->push_back(false);
-				}
-				else
-				{
-					b_fbp->push_back(true);
-				}
-				
-
-				if( ztc->at(k) <  0.2  	 || 
-					ztc->at(k) >  0.95   ||
-					isnan(ztc->at(k))   )	
-				{
-					b_ztc->push_back(false);
-				}
-				else
-				{
-					b_ztc->push_back(true);
-				}
-
-				if(aoe->at(k) < 0.872 	||
-				   aoe->at(k) > 1.3        )
-				{
-					b_aoe->push_back(false);
-				}
-				else
-				{
-					b_aoe->push_back(true); 
-				}
-				
-				for(unsigned int l=0; l<vTime_global.size(); l++)
-				{ 
-					if( tim->at(k) > vTime_global[l][0] && 
-						tim->at(k) < vTime_global[l][1] ) 
-					{
-						b_fsh->back() = false;
-					}
-				}
-
-				for(unsigned int l=0; l<vTime_layer.size(); l++)
-	            { 
-					if( ( tim->at(k) >  vTime_layer[l][0] && 
-						  tim->at(k) <  vTime_layer[l][1]    )   &&
-					    ( det->at(k) >= vTime_layer[l][2] && 
-					      det->at(k) <= vTime_layer[l][3]    )   && 
-					      b_fsh->back() == true )
-					{
-						b_fsh->back() = false;
-					} 
-	            }
-
-				for(unsigned int l=0; l<vTime_det.size(); l++)
-				{ 
-					if( (tim->at(k) > vTime_det[l][0]  && 
-						 tim->at(k) < vTime_det[l][1]     )   && 
-						 det->at(k)== vTime_det[l][2]  && 
-						 b_fsh->back() == true  ) 
-					{
-						b_fsh->back() = false;
-					}
-				}
-				// cout<<"event ID :" 	<<   eid->back()				<< endl;
-				// cout<<"det ID :" 	<<   det->back()				<< endl;
-				// cout<<"fsh " 		<<   b_fsh->back()		<< endl;
-				// cout<<"fip " 		<<   b_fip->back()		<< " " <<fip->at(k)<< endl;
-				// cout<<"fbp " 		<<   b_fbp->back()		<< " " <<fbp->at(k)<< endl;
-				// cout<<"ztc " 		<<   b_ztc->back()		<< " " <<ztc->at(k)<< endl;
-				// cout<<"aoe " 		<<   b_aoe->back()		<< " " <<aoe->at(k)<< endl;
 
 
-				// if(b_fsh->back() &&
-				//    b_fip->back() &&
-				//    b_fbp->back() &&
-				//    b_ztc->back() &&
-				//    b_aoe->back()   )
-				// {
-				// 	switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
-				// 		{
-				// 			case 2013: h[0]->Fill(ene->at(k));
-				// 				       break;
-				// 			case 2014: h[1]->Fill(ene->at(k));
-				// 					   break;
-				// 			case 2015: h[2]->Fill(ene->at(k));
-				// 					   break;
-				// 			case 2016: h[3]->Fill(ene->at(k));
-				// 				       break;
-				// 			case 2017: h[4]->Fill(ene->at(k));
-				// 					   break;
-				// 			case 2018: h[5]->Fill(ene->at(k));
-				// 					   break;
-				// 			case 2019: h[6]->Fill(ene->at(k));
-				// 					   break;
-				// 		}
-				// 	// g->Fill(ene->at(k));
-				// }
+				CO_event* e = new CO_event( ene->at(k),
+							                ztc->at(k),
+							                aoe->at(k),
+							                tim->at(k),
+							                det->at(k),
+							            	eid->at(k),
+							                fip->at(k),
+							                fbp->at(k)	);
+
+				e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max ,
+																		// double _aoe_min , double _aoe_max ,
+								                                        // bool   _fip ,
+								                                        // bool   _fbp ;
+
+				v_eve.push_back(*e);
+
+				delete	e;
+
 			}
 		}
 		delete t;
@@ -476,36 +367,35 @@ void MP()
 		delete fbp;
 	}
 
-	for(int i = 0; i < d_ene->size(); i++)
+	for(int i = 0; i < v_eve.size(); i++) //Filling Histograms
 	{
-		if(b_fsh->at(i) &&
-		   b_fip->at(i) &&
-		   b_fbp->at(i) &&
-		   b_ztc->at(i) &&
-		   b_aoe->at(i)   ) //all cuts passed 
+		if( v_eve.at(i).Passed() ) //all cuts passed 
 		{
-			switch(t_tim->at(i).GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
+			TTimeStamp* tts = new TTimeStamp(v_eve.at(i).Get_c_tim());
+
+			switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
 			{
-				case 2013: h[0]->Fill(d_ene->at(i));
+				case 2013: h[0]->Fill(v_eve.at(i).Get_c_ene());
 					       break;
-				case 2014: h[1]->Fill(d_ene->at(i));
+				case 2014: h[1]->Fill(v_eve.at(i).Get_c_ene());
 						   break;
-				case 2015: h[2]->Fill(d_ene->at(i));
+				case 2015: h[2]->Fill(v_eve.at(i).Get_c_ene());
 						   break;
-				case 2016: h[3]->Fill(d_ene->at(i));
+				case 2016: h[3]->Fill(v_eve.at(i).Get_c_ene());
 					       break;
-				case 2017: h[4]->Fill(d_ene->at(i));
+				case 2017: h[4]->Fill(v_eve.at(i).Get_c_ene());
 						   break;
-				case 2018: h[5]->Fill(d_ene->at(i));
+				case 2018: h[5]->Fill(v_eve.at(i).Get_c_ene());
 						   break;
-				case 2019: h[6]->Fill(d_ene->at(i));
+				case 2019: h[6]->Fill(v_eve.at(i).Get_c_ene());
 						   break;
 			}
+
+			delete tts;
 		}
 	}
 
-
-	TFile* tf = new TFile("Processed_data_w_flush.root", "RECREATE");
+	TFile* tf = new TFile("CO_event_test-2013.root", "RECREATE");
 	for (int d = 0; d < 7; d++)
 	{
 		c[d]->cd();

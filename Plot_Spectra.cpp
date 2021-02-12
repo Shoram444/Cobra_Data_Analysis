@@ -78,6 +78,11 @@ void Plot_Spectra()
 
 	ct->SaveAs("Total_spectrum_with_flush.png");
 
+	TFile* tff = new TFile("test.root", "NEW");
+	h_names->Write();
+	hs->Write();
+
+	delete tf;
 
 
   // gROOT->ProcessLine(".q");
