@@ -27,6 +27,46 @@ const bool global 			= true;
 const bool layer 			= true;
 const bool Det 				= true;
 
+struct paths
+{
+	string 		directory;
+	string 		year;
+	string 		folder;
+	string 		file;
+};
+
+TChain* Make_TChain(vector<paths>  	 root_file_path);
+char* 						str_to_char(string _str);
+vector<string>* ListFiles(string _path, string _key);
+vector<vector<double>> read_times_from_rootrc(const char* cutFile, const char* cut );
+vector<paths> 	ReadFiles();
+TH1F* hist_style(string _title);
+
+
+
+// create chain of trees
+TChain* Make_TChain(vector<paths>  	 root_file_path)
+{
+	TChain* cData = new TChain("merged_cal");
+  
+	for(unsigned int i = 0; i < root_file_path.size(); i++)
+		{
+			char* root_file;
+
+			root_file = str_to_char(root_file_path.at(i).directory + "/" + 
+									root_file_path.at(i).year      + "/" + 
+									root_file_path.at(i).folder    + "/" + 
+									root_file_path.at(i).file );
+
+			if(i%10 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Files Read" << endl;}
+
+			cData->Add(root_file);
+		}
+
+  return cData;  
+}
+
+
 char* str_to_char(string _str)
 {
 	int 	n 	= _str.length();
@@ -37,13 +77,7 @@ char* str_to_char(string _str)
 	return _char;
 }
 
-struct paths
-{
-	string 		directory;
-	string 		year;
-	string 		folder;
-	string 		file;
-};
+
 
 vector<string>* ListFiles(string _path, string _key)
 {
@@ -248,13 +282,21 @@ TH1F* hist_style(string _title)
     return _h;
 }
 
+
 void MP() 
 { 
-	vector<paths>  	 root_file_path; //initialize vector to hold paths for each root file
-	root_file_path = 	ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
+	vector<paths>  	 root_file_path = 	ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
+	// vector<double> 		Jul_edep;
+	vector<double>		Mar_edep;
 	
 	TH1F* 		h[n_of_hist];
 	TCanvas* 	c[n_of_hist];
+
+
+
+	// vector<vector<double>> vTime_global = read_times_from_rootrc("merged_time_cuts.rootrc", "glob" );
+	// vector<vector<double>> vTime_layer  = read_times_from_rootrc("merged_time_cuts.rootrc", "layer");
+	// vector<vector<double>> vTime_det 	= read_times_from_rootrc("merged_time_cuts.rootrc", "det"  );
 
 	// int year_for_title = 2013;
 	int detector_number = 1;
@@ -262,106 +304,168 @@ void MP()
 	{
 		stringstream 			 	   h_title;			//names for histograms		
 		h_title  <<  "h_" <<   	detector_number;
+		// h_title  <<  "h_" <<   	year_for_title;
 		string h_tit_str  = 	 h_title.str();
 
 		stringstream 				   c_title;			//names for canvases
 		c_title  <<  "c_" <<    detector_number;
+		// c_title  <<  "c_" <<    year_for_title;
 		string c_tit_str  = 	 c_title.str();	
 
 		h[y] = hist_style(h_tit_str);
 		c[y] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
 
+		// year_for_title++;
 		detector_number++;
 	}	
 
+	TChain* tChain = Make_TChain(root_file_path);
+
+	vector<float>* 		ene = new vector<float>();
+	vector<float>* 		ztc = new vector<float>();
+	vector<float>* 		aoe = new vector<float>();
+	vector<bool>*		fip = new vector<bool>();
+	vector<bool>*		fbp = new vector<bool>();
+	vector<double>*		tim = new vector<double>();
+	vector<int>*		det = new vector<int>();
+	vector<int>*		eid = new vector<int>();
+
+	tChain->SetBranchAddress("cal_edep", &ene);
+	tChain->SetBranchAddress("cal_ipos_ztc", &ztc);
+	tChain->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
+	tChain->SetBranchAddress("flag_injected_pulse", &fip);
+	tChain->SetBranchAddress("flag_bad_pulse", &fbp);
+	tChain->SetBranchAddress("info_systime", &tim);
+	tChain->SetBranchAddress("cal_det", &det);
+	tChain->SetBranchAddress("info_idx", &eid);
+
+	// int n1 	= tChain->GetBranch("flag_bad_pulse")->GetEntries();
+	// int n2 	= tChain->GetBranch("flag_injected_pulse")->GetEntries();
+	// int n3 	= tChain->GetBranch("cal_ipos_ztc")->GetEntries();
+	// int n4 	= tChain->GetBranch("cal_cpg_diff_AoE")->GetEntries();
+	// int n5 	= tChain->GetBranch("info_systime")->GetEntries();
+	// int n6 	= tChain->GetBranch("cal_det")->GetEntries();
+	// int n7 	= tChain->GetBranch("info_idx")->GetEntries();
+
+	// if(!(n1 == n2 && n2 == n3 && n3 == n4  && n4 == n5 && n5 == n6 && n6 == n7)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
+	// {
+	// 	cout << "ERROR: The leaves in this tree are not of the same size!" << endl;
+	// 	cout << "Size of flag_bad_pulse = " 		<< n1				   << endl;
+	// 	cout << "Size of flag_injected_pulse = " 	<< n2				   << endl; 
+	// 	cout << "Size of cal_ipos_ztc = " 			<< n3				   << endl; 
+	// 	cout << "Size of cal_cpg_diff_AoE = " 		<< n4				   << endl; 
+	// 	cout << "Size of info_systime = " 			<< n5				   << endl; 
+	// 	cout << "Size of cal_det = " 				<< n5				   << endl; 
+	// 	cout << "Size of info_idx = " 				<< n5				   << endl; 
+
+	// 	return;
+	// }
+
 	vector<CO_event> v_eve;
 
-	for(unsigned int i = 0; i < root_file_path.size(); i++)
+	for(unsigned int j = 0; j < tChain->GetEntries(); j++)
 	{
-		char* root_file;
+		if(j%10000==0) cout << j << " of " << tChain->GetEntries() << " Read!" << endl;
+		tChain->GetEntry(j);
 
-		root_file = str_to_char(root_file_path.at(i).directory + "/" + 
-								root_file_path.at(i).year      + "/" + 
-								root_file_path.at(i).folder    + "/" + 
-								root_file_path.at(i).file );
-
-		if(i%10 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Files Read" << endl;}
-
-		// cout<< root_file << endl;
-
-		TFile* f = new TFile(root_file);
-		TTree* t = (TTree*) f->Get("merged_cal");
-
-		vector<double>* 	ene = new vector<double>();
-		vector<double>* 	ztc = new vector<double>();
-		vector<double>* 	aoe = new vector<double>();
-		vector<bool>*		fip = new vector<bool>();
-		vector<bool>*		fbp = new vector<bool>();
-		vector<double>*		tim = new vector<double>();
-		vector<int>*		det = new vector<int>();
-		vector<int>*		eid = new vector<int>();
-
-		t->SetBranchAddress("cal_edep", &ene);
-		t->SetBranchAddress("cal_ipos_ztc", &ztc);
-		t->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
-		t->SetBranchAddress("flag_injected_pulse", &fip);
-		t->SetBranchAddress("flag_bad_pulse", &fbp);
-		t->SetBranchAddress("info_systime", &tim);
-		t->SetBranchAddress("cal_det", &det);
-		t->SetBranchAddress("info_idx", &eid);
-
-		int n1 	= t->GetBranch("flag_bad_pulse")->GetEntries();
-		int n2 	= t->GetBranch("flag_injected_pulse")->GetEntries();
-		int n3 	= t->GetBranch("cal_ipos_ztc")->GetEntries();
-		int n4 	= t->GetBranch("cal_cpg_diff_AoE")->GetEntries();
-		int n5 	= t->GetBranch("info_systime")->GetEntries();
-		int n6 	= t->GetBranch("cal_det")->GetEntries();
-		int n7 	= t->GetBranch("info_idx")->GetEntries();
-
-		if(!(n1 == n2 && n2 == n3 && n3 == n4  && n4 == n5 && n5 == n6 && n6 == n7)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
+		for(unsigned int k = 0; k < ene->size(); k++) ///MAROS EVENT
 		{
-			cout << "ERROR: The leaves in this tree are not of the same size!" << endl;
-			cout << "Size of flag_bad_pulse = " 		<< n1				   << endl;
-			cout << "Size of flag_injected_pulse = " 	<< n2				   << endl; 
-			cout << "Size of cal_ipos_ztc = " 			<< n3				   << endl; 
-			cout << "Size of cal_cpg_diff_AoE = " 		<< n4				   << endl; 
-			cout << "Size of info_systime = " 			<< n5				   << endl; 
-			cout << "Size of cal_det = " 				<< n5				   << endl; 
-			cout << "Size of info_idx = " 				<< n5				   << endl; 
 
-			return;
-		}
-		
+			CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), tim->at(k)  ,
+						                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
+			e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
+							                                        // bool   _fip , bool   _fbp ;
+			v_eve.push_back(*e);
 
-		for(unsigned int j = 0; j < n1 ; j++) //Extracting cuts and energies from TTree
-		{
-			t->GetEntry(j);
-
-			for(unsigned int k = 0; k < ene->size(); k++)
+			if( e->Passed() )
 			{
-				CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), tim->at(k)  ,
-							                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
-				e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
-								                                        // bool   _fip , bool   _fbp ;
-				v_eve.push_back(*e);
+				// cout << "MAROS!!!!! " << endl;
+				// e->Print();
+				// cout << " fip->at(k) = " << fip->at(k) << "   get_c_fip() = " << e->Get_c_fip() << "  Get_m_fip" << endl << endl ;
 
-				delete	e;
+				Mar_edep.push_back(e->Get_c_ene());
 			}
+
+			delete	e;
 		}
+
+
+	// 	for(unsigned int l=0; l<ene->size(); l++)
+	// 	{
+
+	// 		if(fbp->at(l)==0 && fip->at(l)==0 && ztc->at(l)>0.2 && ztc->at(l)<0.95 && aoe->at(l)>0.872 && aoe->at(l)<1.3) //JUL EVENT
+	//         {
+
+
+	          
+	//             for(unsigned int k=0; k<vTime_global.size(); k++)
+	//             { 
+	//               if( tim->at(l) > vTime_global[k][0] && tim->at(l) < vTime_global[k][1] ) goto end;
+	//             }
+	            
+	//             for(unsigned int k=0; k<vTime_layer.size(); k++)
+	//             { 
+	//               if( (tim->at(l) > vTime_layer[k][0] && tim->at(l) < vTime_layer[k][1]) && (det->at(l)>=vTime_layer[k][2] && det->at(l)<=vTime_layer[k][3]) ) goto end;
+	//             }
+	            
+	//             for(unsigned int k=0; k<vTime_det.size(); k++)
+	//             { 
+	//               if( (tim->at(l) > vTime_det[k][0] && tim->at(l) < vTime_det[k][1]) && det->at(l)==vTime_det[k][2] ) goto end;
+	//             }
+	            
+	// //             for(unsigned int k=0; k<vTime_totaldet.size(); k++)
+	// //             { 
+	// //               if( (tim->at(l) > vTime_totaldet[k][0] && tim->at(l) < vTime_totaldet[k][1]) && det->at(l)==vTime_totaldet[k][2] ) goto end;
+	// //             }
+	// 			Jul_edep.push_back(ene->at(l));
+
+	// 			// cout << "JULIANA!!!" << endl;
+	// 		 //    cout << "=============================================" << endl << endl ;
+	// 		 //    cout << " event Energy: " << ene->at(l) << endl;
+	// 		 //    cout << " fip:  " << fip->at(l) << endl;
+	// 		 //    cout << " fbp:  " << fbp->at(l) << endl;
+	// 		 //    cout << " Z:    " << ztc->at(l) << endl;
+	// 		 //    cout << " AoE:  " << aoe->at(l) << endl;
+	// 		 //    cout << "=============================================" << endl << endl ;
+
+
+	// 			// h_edep_total->Fill(edep);
+	          
+	// 			end:;
+	//         }
+	//     }
+	    // cout << "AA" << endl;
+	    // if( Mar_edep.back() != Jul_edep.back() )
+	    // {
+	    // 	cout << "Mar_edep = " << Mar_edep.back() << "  Jul_edep = " << Jul_edep.back() << endl;
+	    // }
+
+
 		ene->clear();
 		ztc->clear();
 		aoe->clear();
 		fip->clear();
 		fbp->clear();
-		delete t;
-		delete f;
 	}
+
+	// cout<< "Size of Jul_edep = " << Jul_edep.size() << " |||||| Size of Mar_edep " << Mar_edep.size() << endl;
+	// int dif_entry = 0;
+	// for(unsigned int i = 0; i < Mar_edep.size() ; i++)
+	// {
+
+	// 	if(Mar_edep.at(i) != Jul_edep.at(i))
+	// 	{
+	// 		dif_entry += 1;
+	// 		cout<< "Different entry!  " << dif_entry << endl;
+	// 	}
+	// }
 
 	for(int i = 0; i < v_eve.size(); i++) //Filling Histograms
 	{
 		// v_eve.at(i).Print();
 
 		// cout<< "cal_det size : " << v_eve.at(i).Get_c_det() << endl ;
+
 
 		if( v_eve.at(i).Passed() ) //all cuts passed 
 		{
@@ -395,7 +499,7 @@ void MP()
 		}
 	}
 
-	TFile* tf = new TFile("CO_event-detectors.root", "RECREATE");
+	TFile* tf = new TFile("CO_event-TChain_detectors.root", "RECREATE");
 	for (int d = 0; d < n_of_hist; d++)
 	{
 		c[d]->cd();
