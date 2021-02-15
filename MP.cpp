@@ -21,7 +21,7 @@ using namespace std;
 
 R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_event/lib/libCO_event.so);
 
-const int n_of_hist 		=    7;
+const int n_of_hist 		=    64;
 const bool removeBadPeriods = true;
 const bool global 			= true;
 const bool layer 			= true;
@@ -256,21 +256,22 @@ void MP()
 	TH1F* 		h[n_of_hist];
 	TCanvas* 	c[n_of_hist];
 
-	int year_for_title = 2013;
+	// int year_for_title = 2013;
+	int detector_number = 1;
 	for(unsigned int y = 0; y < n_of_hist; y++)
 	{
 		stringstream 			 	   h_title;			//names for histograms		
-		h_title  <<  "h_" <<   	year_for_title;
+		h_title  <<  "h_" <<   	detector_number;
 		string h_tit_str  = 	 h_title.str();
 
 		stringstream 				   c_title;			//names for canvases
-		c_title  <<  "c_" <<    year_for_title;
+		c_title  <<  "c_" <<    detector_number;
 		string c_tit_str  = 	 c_title.str();	
 
 		h[y] = hist_style(h_tit_str);
 		c[y] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
 
-		year_for_title++;
+		detector_number++;
 	}	
 
 	vector<CO_event> v_eve;
@@ -285,6 +286,8 @@ void MP()
 								root_file_path.at(i).file );
 
 		if(i%10 == 0 ){cout<< i <<" of " << root_file_path.size() <<  " Files Read" << endl;}
+
+		// cout<< root_file << endl;
 
 		TFile* f = new TFile(root_file);
 		TTree* t = (TTree*) f->Get("merged_cal");
@@ -336,72 +339,68 @@ void MP()
 
 			for(unsigned int k = 0; k < ene->size(); k++)
 			{
-
-
-				CO_event* e = new CO_event( ene->at(k),
-							                ztc->at(k),
-							                aoe->at(k),
-							                tim->at(k),
-							                det->at(k),
-							            	eid->at(k),
-							                fip->at(k),
-							                fbp->at(k)	);
-
-				e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max ,
-																		// double _aoe_min , double _aoe_max ,
-								                                        // bool   _fip ,
-								                                        // bool   _fbp ;
-
+				CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), tim->at(k)  ,
+							                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
+				e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
+								                                        // bool   _fip , bool   _fbp ;
 				v_eve.push_back(*e);
 
 				delete	e;
-
 			}
 		}
+		ene->clear();
+		ztc->clear();
+		aoe->clear();
+		fip->clear();
+		fbp->clear();
 		delete t;
 		delete f;
-		delete ene;
-		delete ztc;
-		delete aoe;
-		delete fip;
-		delete fbp;
 	}
 
 	for(int i = 0; i < v_eve.size(); i++) //Filling Histograms
 	{
+		// v_eve.at(i).Print();
+
+		// cout<< "cal_det size : " << v_eve.at(i).Get_c_det() << endl ;
+
 		if( v_eve.at(i).Passed() ) //all cuts passed 
 		{
-			TTimeStamp* tts = new TTimeStamp(v_eve.at(i).Get_c_tim());
+			// v_eve.at(i).Print();
+			h[v_eve.at(i).Get_c_det() - 1]->Fill(v_eve.at(i).Get_c_ene());
+			// cout<< "cal_det size : " << v_eve.at(i).Get_c_det() << endl ;
 
-			switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
-			{
-				case 2013: h[0]->Fill(v_eve.at(i).Get_c_ene());
-					       break;
-				case 2014: h[1]->Fill(v_eve.at(i).Get_c_ene());
-						   break;
-				case 2015: h[2]->Fill(v_eve.at(i).Get_c_ene());
-						   break;
-				case 2016: h[3]->Fill(v_eve.at(i).Get_c_ene());
-					       break;
-				case 2017: h[4]->Fill(v_eve.at(i).Get_c_ene());
-						   break;
-				case 2018: h[5]->Fill(v_eve.at(i).Get_c_ene());
-						   break;
-				case 2019: h[6]->Fill(v_eve.at(i).Get_c_ene());
-						   break;
-			}
 
-			delete tts;
+
+			// TTimeStamp* tts = new TTimeStamp(v_eve.at(i).Get_c_tim());
+
+			// switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
+			// {
+			// 	case 2013: h[0]->Fill(v_eve.at(i).Get_c_ene());
+			// 		       break;
+			// 	case 2014: h[1]->Fill(v_eve.at(i).Get_c_ene());
+			// 			   break;
+			// 	case 2015: h[2]->Fill(v_eve.at(i).Get_c_ene());
+			// 			   break;
+			// 	case 2016: h[3]->Fill(v_eve.at(i).Get_c_ene());
+			// 		       break;
+			// 	case 2017: h[4]->Fill(v_eve.at(i).Get_c_ene());
+			// 			   break;
+			// 	case 2018: h[5]->Fill(v_eve.at(i).Get_c_ene());
+			// 			   break;
+			// 	case 2019: h[6]->Fill(v_eve.at(i).Get_c_ene());
+			// 			   break;
+			// }
+
+			// delete tts;
 		}
 	}
 
-	TFile* tf = new TFile("CO_event_test-2013.root", "RECREATE");
-	for (int d = 0; d < 7; d++)
+	TFile* tf = new TFile("CO_event-detectors.root", "RECREATE");
+	for (int d = 0; d < n_of_hist; d++)
 	{
 		c[d]->cd();
 		h[d]->Draw();
 		h[d]->Write();
 	}
 	delete tf;
-
 }

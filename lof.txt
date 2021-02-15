@@ -1,18 +1,4 @@
-   ------------------------------------------------------------
-  | Welcome to ROOT 6.18/04                  https://root.cern |
-  |                               (c) 1995-2019, The ROOT Team |
-  | Built for linuxx8664gcc on Sep 11 2019, 15:38:23           |
-  | From tags/v6-18-04@v6-18-04                                |
-  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
-   ------------------------------------------------------------
-
-
-Processing MP.cpp...
-Please specify the path to Data parent directory: Please specify Year of desired data (Use "20" for all years): Please specify keyword for which folders to scan (Use "cpg" for all years): Please specify keyword for which files to scan (Use ".root" for all years): rootrc opened successfully!
-rootrc opened successfully!
-rootrc opened successfully!
 ../COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1853_merged_2.root
-0 of 18806 Read
 ../COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1453_merged_2.root
 ../COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_2253_merged_1.root
 ../COBRA_Data/2014/2014-12-01_7e1aa7bd_pr_cpg-pulse-cal_4x16layer/cpg_run_20141201_1453_merged_1.root
@@ -1013,7 +999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140815_1811_merged_2.root
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140814_1411_merged_1.root
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140816_0211_merged_2.root
-1000 of 18806 Read
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140816_2211_merged_2.root
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140811_1937_merged_1.root
 ../COBRA_Data/2014/2014-08-11_082f34d0_pr_cpg-pulse-cal_4x16layer/cpg_run_20140814_1811_merged_2.root
@@ -2014,7 +1999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2014/2014-12-15_f688163a_pr_cpg-pulse-cal_4x16layer/cpg_run_20141221_0722_merged_1.root
 ../COBRA_Data/2014/2014-12-15_f688163a_pr_cpg-pulse-cal_4x16layer/cpg_run_20141227_1522_merged_1.root
 ../COBRA_Data/2014/2014-12-15_f688163a_pr_cpg-pulse-cal_4x16layer/cpg_run_20141229_1122_merged_1.root
-2000 of 18806 Read
 ../COBRA_Data/2014/2014-12-15_f688163a_pr_cpg-pulse-cal_4x16layer/cpg_run_20141229_0722_merged_1.root
 ../COBRA_Data/2014/2014-12-15_f688163a_pr_cpg-pulse-cal_4x16layer/cpg_run_20141229_2322_merged_2.root
 ../COBRA_Data/2014/2014-09-05_6aaf118b_pr_cpg-pulse-cal_4x16layer/cpg_run_20140914_1832_merged_2.root
@@ -3015,7 +2999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140328_0204_merged_2.root
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140330_2204_merged_2.root
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140325_0604_merged_1.root
-3000 of 18806 Read
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140328_0604_merged_2.root
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140327_1004_merged_1.root
 ../COBRA_Data/2014/2014-03-24_bbab5f55_pr_cpg-pulse-cal_4x16layer/cpg_run_20140324_1404_merged_1.root
@@ -4016,7 +3999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151204_0331_merged_2.root
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151203_1531_merged_1.root
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151201_0331_merged_1.root
-4000 of 18806 Read
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151128_1931_merged_1.root
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151130_1131_merged_1.root
 ../COBRA_Data/2015/2015-11-27_26c4bb08_pr_cpg-pulse-cal_4x16layer/cpg_run_20151202_0731_merged_1.root
@@ -5017,7 +4999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150922_0050_merged_2.root
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150922_0450_merged_1.root
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150921_1250_merged_1.root
-5000 of 18806 Read
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150921_0851_merged_2.root
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150922_0050_merged_1.root
 ../COBRA_Data/2015/2015-09-21_38f31163_pr_cpg-pulse-cal_4x16layer/cpg_run_20150921_1250_merged_2.root
@@ -6018,7 +5999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150128_2214_merged_1.root
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150201_0614_merged_2.root
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150128_1414_merged_2.root
-6000 of 18806 Read
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150125_1414_merged_1.root
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150126_1014_merged_2.root
 ../COBRA_Data/2015/2015-01-20_60ad3858_pr_cpg-pulse-cal_4x16layer/cpg_run_20150128_1814_merged_1.root
@@ -7019,7 +6999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150816_0708_merged_2.root
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150812_1908_merged_1.root
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150813_2308_merged_2.root
-7000 of 18806 Read
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150817_1108_merged_1.root
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150811_1108_merged_1.root
 ../COBRA_Data/2015/2015-08-10_2890cb07_pr_cpg-pulse-cal_4x16layer/cpg_run_20150811_1908_merged_1.root
@@ -8020,7 +7999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170920_0348_merged_1.root
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170920_1548_merged_1.root
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170919_1948_merged_1.root
-8000 of 18806 Read
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170922_2348_merged_1.root
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170922_1948_merged_1.root
 ../COBRA_Data/2017/2017-09-19_56d72f94_pr_cpg-pulse-cal_4x16layer/cpg_run_20170921_2348_merged_1.root
@@ -9021,7 +8999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170804_1242_merged_1.root
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170807_0442_merged_1.root
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170804_0842_merged_1.root
-9000 of 18806 Read
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170807_1243_merged_1.root
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170806_0842_merged_1.root
 ../COBRA_Data/2017/2017-08-04_e1f1e0bb_pr_cpg-pulse-cal_4x16layer/cpg_run_20170806_2042_merged_1.root
@@ -10022,7 +9999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190430_1932_merged_1.root
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190428_1532_merged_2.root
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190425_2332_merged_1.root
-10000 of 18806 Read
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190427_2332_merged_2.root
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190426_1932_merged_1.root
 ../COBRA_Data/2019/2019-04-23_aa3b4e78_pr_cpg-pulse-cal_4x16layer/cpg_run_20190426_0332_merged_2.root
@@ -11023,7 +10999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190319_2005_merged_2.root
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190309_2006_merged_1.root
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190309_0006_merged_2.root
-11000 of 18806 Read
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190307_1606_merged_2.root
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190311_0806_merged_2.root
 ../COBRA_Data/2019/2019-03-07_b57d4a98_pr_cpg-pulse-cal_4x16layer/cpg_run_20190318_2005_merged_1.root
@@ -12024,7 +11999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190627_0440_merged_1.root
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190626_1241_merged_1.root
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190626_1641_merged_2.root
-12000 of 18806 Read
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190626_1641_merged_1.root
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190628_0440_merged_1.root
 ../COBRA_Data/2019/2019-06-26_7e2eab5d_pr_cpg-pulse-cal_4x16layer/cpg_run_20190626_2041_merged_2.root
@@ -13025,7 +12999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181215_2223_merged_1.root
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181213_1824_merged_2.root
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181213_1424_merged_2.root
-13000 of 18806 Read
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181215_0623_merged_1.root
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181215_2223_merged_2.root
 ../COBRA_Data/2018/2018-12-13_076dd8f7_pr_cpg-pulse-cal_4x16layer/cpg_run_20181215_0224_merged_2.root
@@ -14026,7 +13999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130531_0202_merged_1.root
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130530_0602_merged_2.root
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130601_1802_merged_1.root
-14000 of 18806 Read
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130529_1002_merged_1.root
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130529_0202_merged_2.root
 ../COBRA_Data/2013/2013-05-28_2c171bad_pr_cpg-pulse-cal_2x16layer/cpg_run_20130601_2202_merged_1.root
@@ -15027,7 +14999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130818_1753_merged_1.root
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130817_0553_merged_1.root
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130815_0953_merged_1.root
-15000 of 18806 Read
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130815_2153_merged_2.root
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130816_0153_merged_1.root
 ../COBRA_Data/2013/2013-08-12_a83a9368_pr_cpg-pulse-cal_3x16layer/cpg_run_20130814_0553_merged_1.root
@@ -16028,7 +15999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160117_2022_merged_1.root
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160116_2022_merged_2.root
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160117_0822_merged_1.root
-16000 of 18806 Read
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160122_1222_merged_1.root
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160119_1622_merged_2.root
 ../COBRA_Data/2016/2016-01-15_d6b591b4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160115_1222_merged_2.root
@@ -17029,7 +16999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160110_1315_merged_1.root
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160107_1315_merged_2.root
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160109_1315_merged_2.root
-17000 of 18806 Read
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160112_0915_merged_2.root
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160112_0515_merged_2.root
 ../COBRA_Data/2016/2016-01-04_835c1de9_pr_cpg-pulse-cal_4x16layer/cpg_run_20160112_0515_merged_1.root
@@ -18030,7 +17999,6 @@ rootrc opened successfully!
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160420_0432_merged_1.root
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160422_0432_merged_2.root
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160424_2032_merged_1.root
-18000 of 18806 Read
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160425_0032_merged_1.root
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160424_0832_merged_2.root
 ../COBRA_Data/2016/2016-04-18_c1c70ec4_pr_cpg-pulse-cal_4x16layer/cpg_run_20160425_0832_merged_1.root

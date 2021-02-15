@@ -19,13 +19,13 @@ void Plot_Spectra()
 {
 
 	TH1F* 		h[n_of_hist];
-	TH1F*				 tot;
+	TH1F*				 tot = new ;
 
 	vector<const char*>	h_names;
 
 	TCanvas* 	c 	= new TCanvas("c", "Energy", 1000, 600);
 	THStack* 	hs  = new THStack("Histograms","Deposited Energy; Energy[keV]; Counts[#]");
-	TFile* 		tf  = new TFile("Processed_data_w_flush.root");
+	TFile* 		tf  = new TFile("CO_Event_All_Data-final.root");
 	TCanvas* 	ct 	= new TCanvas("ct", "Tot_Energy", 1000, 600);
 
 
@@ -67,22 +67,26 @@ void Plot_Spectra()
 	hs->GetXaxis()->SetTitle("Energy [ keV ]"); 
 	hs->GetYaxis()->SetTitle("Counts [ # ]"); 
 	c->Modified();
+	c->Update();
 
 	gPad->BuildLegend(0.85,0.55,0.98,0.75,"");
 
 	ct->cd();
 	gPad->SetGrid();
 	gPad->SetLogy();
+	ct->Update();
 
 	tot->Draw();
+	tot->GetXaxis()->SetRangeUser(0.01, 3000);
+
 
 	ct->SaveAs("Total_spectrum_with_flush.png");
 
-	TFile* tff = new TFile("test.root", "NEW");
-	h_names->Write();
+	TFile* tff = new TFile("Plots_from_CO_Event-1.root", "NEW");
+	c->Write();
 	hs->Write();
 
-	delete tf;
+	// delete tf;
 
 
   // gROOT->ProcessLine(".q");
