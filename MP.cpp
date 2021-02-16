@@ -499,7 +499,7 @@ void MP()
 		}
 	}
 
-	TFile* tf = new TFile("CO_event-TChain_detectors.root", "RECREATE");
+	TFile* tf = new TFile("CO_event-TChain_small_test.root", "RECREATE");
 	for (int d = 0; d < n_of_hist; d++)
 	{
 		c[d]->cd();
