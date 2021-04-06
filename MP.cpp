@@ -14,14 +14,17 @@
 #include </home/shoram/ProgramFiles/boost_1_75_0/boost/algorithm/string/find.hpp>
 #include "TSystem.h"
 #include "/home/shoram/Work/Diploma_Thesis/CO_event/include/CO_event.hh"
+#include "/home/shoram/Work/Diploma_Thesis/CO_detector/include/CO_detector.hh"
 
 
 using namespace boost;
 using namespace std;
 
 R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_event/lib/libCO_event.so);
+R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_detector/lib/libCO_detector.so);
 
-const int n_of_hist 		=    64;
+const int n_of_hist 		=   64;
+const int n_of_det			= 	65;   ///WATCH OUT! Detector numbering starts from 1, so there has to be n+1 n_of_det
 const bool removeBadPeriods = true;
 const bool global 			= true;
 const bool layer 			= true;
@@ -35,7 +38,7 @@ struct paths
 	string 		file;
 };
 
-TChain* Make_TChain(vector<paths>  	 root_file_path);
+TChain* Make_TChain(vector<paths>  	 root_file_path, const char* _ttree);
 char* 						str_to_char(string _str);
 vector<string>* ListFiles(string _path, string _key);
 vector<vector<double>> read_times_from_rootrc(const char* cutFile, const char* cut );
@@ -45,9 +48,10 @@ TH1F* hist_style(string _title);
 
 
 // create chain of trees
-TChain* Make_TChain(vector<paths>  	 root_file_path)
+TChain* Make_TChain(vector<paths>  	 root_file_path, const char* _ttree)
 {
-	TChain* cData = new TChain("merged_cal");
+
+	TChain* cData = new TChain(_ttree);
   
 	for(unsigned int i = 0; i < root_file_path.size(); i++)
 		{
@@ -282,229 +286,305 @@ TH1F* hist_style(string _title)
     return _h;
 }
 
+void sanity_check(TChain* tc)
+{
+	int n1 	= tc->GetBranch("flag_bad_pulse")->GetEntries();
+	int n2 	= tc->GetBranch("flag_injected_pulse")->GetEntries();
+	int n3 	= tc->GetBranch("cal_ipos_ztc")->GetEntries();
+	int n4 	= tc->GetBranch("cal_cpg_diff_AoE")->GetEntries();
+	int n5 	= tc->GetBranch("info_systime")->GetEntries();
+	int n6 	= tc->GetBranch("cal_det")->GetEntries();
+	int n7 	= tc->GetBranch("info_idx")->GetEntries();
+
+	if(!(n1 == n2 && n2 == n3 && n3 == n4  && n4 == n5 && n5 == n6 && n6 == n7)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
+	{
+		cout << "ERROR: The leaves in this tree are not of the same size!" << endl;
+		cout << "Size of flag_bad_pulse = " 		<< n1				   << endl;
+		cout << "Size of flag_injected_pulse = " 	<< n2				   << endl; 
+		cout << "Size of cal_ipos_ztc = " 			<< n3				   << endl; 
+		cout << "Size of cal_cpg_diff_AoE = " 		<< n4				   << endl; 
+		cout << "Size of info_systime = " 			<< n5				   << endl; 
+		cout << "Size of cal_det = " 				<< n5				   << endl; 
+		cout << "Size of info_idx = " 				<< n5				   << endl; 
+
+		return;
+	}
+}
+
+
+double Get_Total_Exposure()
+{
+	vector<paths> 	root_file_path = ReadFiles();
+	CO_detector 	a_det[n_of_det];
+
+	double 	total_exposure = 0.0;
+	int    	det_Id		   =  23;
+
+	const char* runs = "runs";
+	TChain* t_runs = Make_TChain(root_file_path, runs);
+
+	vector<int>* 	dno = new vector<int>;
+	vector<double>* mas = new vector<double>;
+	Double_t		dur;
+
+
+
+	t_runs->SetBranchAddress("det_no", &dno);
+	t_runs->SetBranchAddress("det_mass", &mas);
+	t_runs->SetBranchAddress("duration", &dur);
+
+
+	for( unsigned int i = 0 ; i < t_runs->GetEntries() ; i++ )
+	{
+		if(i%10000==0) cout << i << " of " << t_runs->GetEntries() << " Read!" << endl;
+		t_runs->GetEntry(i);
+
+		for( unsigned int j = 0 ; j < dno->size() ; j++ )
+		{
+			if(dno->at(j) == det_Id)
+			{
+				a_det[dno->at(j)].Add( dno->at(j), mas->at(j), dur, p0->at(j), p1->at(j), p2->at(j)	);
+			}
+
+			// a_det[dno->at(j)].Add( dno->at(j) , mas->at(j) , dur);
+		}
+	}
+
+	// TCanvas* 	cg = new TCanvas("cg" , "cg ");
+	// TGraph* 	tg = new TGraph();
+
+	// for( int d = 1; d < n_of_det; d++)			///WATCH OUT! Detector numbering starts from 1, so there has to be n+1 n_of_det
+	// {
+	// 	total_exposure += a_det[d].calc_exposure();
+	// 	tg->SetPoint(d - 1, d, a_det[d].get_c_dur());
+	// }
+
+	// cg->cd();
+	// tg->SetFillColor(38);
+	// tg->Draw("AB1");
+
+	// cout << endl << endl ;
+	// cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+	// cout << "Total exposure = " << total_exposure << " kgd" 	  << endl; 
+  	
+  	total_exposure = a_det[det_Id].calc_exposure();
+
+  	return total_exposure;
+
+}
+
 
 void MP() 
 { 
-	vector<paths>  	 root_file_path = 	ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
-	// vector<double> 		Jul_edep;
-	vector<double>		Mar_edep;
-	
-	TH1F* 		h[n_of_hist];
-	TCanvas* 	c[n_of_hist];
+	// vector<paths> 	root_file_path = ReadFiles();
+ // 	vector<CO_detector> v_det;
+ 
+	// const char* runs = "runs";
+	// TChain* t_runs = Make_TChain(root_file_path, runs);
+
+	// vector<int>* 	dno = new vector<int>;
+	// vector<double>* mas = new vector<double>;
+	// Double_t		dur;
+	// vector<double>* p0  = new vector<double>;
+	// vector<double>* p1  = new vector<double>;
+	// vector<double>* p2  = new vector<double>;
 
 
+	// t_runs->SetBranchAddress("det_no", &dno);
+	// t_runs->SetBranchAddress("det_mass", &mas);
+	// t_runs->SetBranchAddress("duration", &dur);
+	// t_runs->SetBranchAddress("det_res_p0", &p0);
+	// t_runs->SetBranchAddress("det_res_p1", &p1);
+	// t_runs->SetBranchAddress("det_res_p2", &p2);
 
-	// vector<vector<double>> vTime_global = read_times_from_rootrc("merged_time_cuts.rootrc", "glob" );
-	// vector<vector<double>> vTime_layer  = read_times_from_rootrc("merged_time_cuts.rootrc", "layer");
-	// vector<vector<double>> vTime_det 	= read_times_from_rootrc("merged_time_cuts.rootrc", "det"  );
-
-	// int year_for_title = 2013;
-	int detector_number = 1;
-	for(unsigned int y = 0; y < n_of_hist; y++)
-	{
-		stringstream 			 	   h_title;			//names for histograms		
-		h_title  <<  "h_" <<   	detector_number;
-		// h_title  <<  "h_" <<   	year_for_title;
-		string h_tit_str  = 	 h_title.str();
-
-		stringstream 				   c_title;			//names for canvases
-		c_title  <<  "c_" <<    detector_number;
-		// c_title  <<  "c_" <<    year_for_title;
-		string c_tit_str  = 	 c_title.str();	
-
-		h[y] = hist_style(h_tit_str);
-		c[y] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
-
-		// year_for_title++;
-		detector_number++;
-	}	
-
-	TChain* tChain = Make_TChain(root_file_path);
-
-	vector<float>* 		ene = new vector<float>();
-	vector<float>* 		ztc = new vector<float>();
-	vector<float>* 		aoe = new vector<float>();
-	vector<bool>*		fip = new vector<bool>();
-	vector<bool>*		fbp = new vector<bool>();
-	vector<double>*		tim = new vector<double>();
-	vector<int>*		det = new vector<int>();
-	vector<int>*		eid = new vector<int>();
-
-	tChain->SetBranchAddress("cal_edep", &ene);
-	tChain->SetBranchAddress("cal_ipos_ztc", &ztc);
-	tChain->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
-	tChain->SetBranchAddress("flag_injected_pulse", &fip);
-	tChain->SetBranchAddress("flag_bad_pulse", &fbp);
-	tChain->SetBranchAddress("info_systime", &tim);
-	tChain->SetBranchAddress("cal_det", &det);
-	tChain->SetBranchAddress("info_idx", &eid);
-
-	// int n1 	= tChain->GetBranch("flag_bad_pulse")->GetEntries();
-	// int n2 	= tChain->GetBranch("flag_injected_pulse")->GetEntries();
-	// int n3 	= tChain->GetBranch("cal_ipos_ztc")->GetEntries();
-	// int n4 	= tChain->GetBranch("cal_cpg_diff_AoE")->GetEntries();
-	// int n5 	= tChain->GetBranch("info_systime")->GetEntries();
-	// int n6 	= tChain->GetBranch("cal_det")->GetEntries();
-	// int n7 	= tChain->GetBranch("info_idx")->GetEntries();
-
-	// if(!(n1 == n2 && n2 == n3 && n3 == n4  && n4 == n5 && n5 == n6 && n6 == n7)) // Check if the sizes of leaves are the same. The cut function iterates through size of vector, so they must be same. 
+	// for( unsigned int i = 0 ; i < t_runs->GetEntries() ; i++ )
 	// {
-	// 	cout << "ERROR: The leaves in this tree are not of the same size!" << endl;
-	// 	cout << "Size of flag_bad_pulse = " 		<< n1				   << endl;
-	// 	cout << "Size of flag_injected_pulse = " 	<< n2				   << endl; 
-	// 	cout << "Size of cal_ipos_ztc = " 			<< n3				   << endl; 
-	// 	cout << "Size of cal_cpg_diff_AoE = " 		<< n4				   << endl; 
-	// 	cout << "Size of info_systime = " 			<< n5				   << endl; 
-	// 	cout << "Size of cal_det = " 				<< n5				   << endl; 
-	// 	cout << "Size of info_idx = " 				<< n5				   << endl; 
+	// 	if(i%10000==0) cout << i << " of " << t_runs->GetEntries() << " Read!" << endl;
+	// 	t_runs->GetEntry(i);
 
-	// 	return;
+	// 	for( unsigned int j = 0 ; j < dno->size() ; j++ )
+	// 	{
+	// 		CO_detector* d = new CO_detector( dno->at(j), mas->at(j), dur, p0->at(j), p1->at(j), p2->at(j) );
+	// 		v_det.push_back(*d);
+
+	// 		delete	d;
+	// 	}
+	// 	dno->clear();
+	// 	mas->clear();
+	// 	p0->clear();
+	// 	p1->clear();
+	// 	p2->clear();
 	// }
 
-	vector<CO_event> v_eve;
-
-	for(unsigned int j = 0; j < tChain->GetEntries(); j++)
-	{
-		if(j%10000==0) cout << j << " of " << tChain->GetEntries() << " Read!" << endl;
-		tChain->GetEntry(j);
-
-		for(unsigned int k = 0; k < ene->size(); k++) ///MAROS EVENT
-		{
-
-			CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), tim->at(k)  ,
-						                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
-			e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
-							                                        // bool   _fip , bool   _fbp ;
-			v_eve.push_back(*e);
-
-			if( e->Passed() )
-			{
-				// cout << "MAROS!!!!! " << endl;
-				// e->Print();
-				// cout << " fip->at(k) = " << fip->at(k) << "   get_c_fip() = " << e->Get_c_fip() << "  Get_m_fip" << endl << endl ;
-
-				Mar_edep.push_back(e->Get_c_ene());
-			}
-
-			delete	e;
-		}
-
-
-	// 	for(unsigned int l=0; l<ene->size(); l++)
-	// 	{
-
-	// 		if(fbp->at(l)==0 && fip->at(l)==0 && ztc->at(l)>0.2 && ztc->at(l)<0.95 && aoe->at(l)>0.872 && aoe->at(l)<1.3) //JUL EVENT
-	//         {
-
-
-	          
-	//             for(unsigned int k=0; k<vTime_global.size(); k++)
-	//             { 
-	//               if( tim->at(l) > vTime_global[k][0] && tim->at(l) < vTime_global[k][1] ) goto end;
-	//             }
-	            
-	//             for(unsigned int k=0; k<vTime_layer.size(); k++)
-	//             { 
-	//               if( (tim->at(l) > vTime_layer[k][0] && tim->at(l) < vTime_layer[k][1]) && (det->at(l)>=vTime_layer[k][2] && det->at(l)<=vTime_layer[k][3]) ) goto end;
-	//             }
-	            
-	//             for(unsigned int k=0; k<vTime_det.size(); k++)
-	//             { 
-	//               if( (tim->at(l) > vTime_det[k][0] && tim->at(l) < vTime_det[k][1]) && det->at(l)==vTime_det[k][2] ) goto end;
-	//             }
-	            
-	// //             for(unsigned int k=0; k<vTime_totaldet.size(); k++)
-	// //             { 
-	// //               if( (tim->at(l) > vTime_totaldet[k][0] && tim->at(l) < vTime_totaldet[k][1]) && det->at(l)==vTime_totaldet[k][2] ) goto end;
-	// //             }
-	// 			Jul_edep.push_back(ene->at(l));
-
-	// 			// cout << "JULIANA!!!" << endl;
-	// 		 //    cout << "=============================================" << endl << endl ;
-	// 		 //    cout << " event Energy: " << ene->at(l) << endl;
-	// 		 //    cout << " fip:  " << fip->at(l) << endl;
-	// 		 //    cout << " fbp:  " << fbp->at(l) << endl;
-	// 		 //    cout << " Z:    " << ztc->at(l) << endl;
-	// 		 //    cout << " AoE:  " << aoe->at(l) << endl;
-	// 		 //    cout << "=============================================" << endl << endl ;
-
-
-	// 			// h_edep_total->Fill(edep);
-	          
-	// 			end:;
-	//         }
-	//     }
-	    // cout << "AA" << endl;
-	    // if( Mar_edep.back() != Jul_edep.back() )
-	    // {
-	    // 	cout << "Mar_edep = " << Mar_edep.back() << "  Jul_edep = " << Jul_edep.back() << endl;
-	    // }
-
-
-		ene->clear();
-		ztc->clear();
-		aoe->clear();
-		fip->clear();
-		fbp->clear();
-	}
-
-	// cout<< "Size of Jul_edep = " << Jul_edep.size() << " |||||| Size of Mar_edep " << Mar_edep.size() << endl;
-	// int dif_entry = 0;
-	// for(unsigned int i = 0; i < Mar_edep.size() ; i++)
+	// int 	d_arr [64];
+	// double  d_sen [64];
+	// for(int j = 0; j<64 ; j++)
 	// {
+	// 	d_arr[j] = j+1;
+	// 	d_sen [j] = 0;
+	// }
 
-	// 	if(Mar_edep.at(i) != Jul_edep.at(i))
+	// for(int i = 0; i < v_det.size(); i++)
+	// {
+	// 	for(int j = 0; j<64 ; j++)
 	// 	{
-	// 		dif_entry += 1;
-	// 		cout<< "Different entry!  " << dif_entry << endl;
+	// 		if(v_det.at(i).get_c_dno() == d_arr[j])
+	// 		{
+	// 			d_sen[j] = v_det.at(i).calc_sensitivity(2813.4);
+	// 		}
 	// 	}
 	// }
 
-	for(int i = 0; i < v_eve.size(); i++) //Filling Histograms
-	{
-		// v_eve.at(i).Print();
+	// cout << " Number , sensitivity " << endl;
 
-		// cout<< "cal_det size : " << v_eve.at(i).Get_c_det() << endl ;
+	// for(int j = 0; j<64 ; j++)
+	// {
+	// 	cout << d_sen[j] << endl;
+	// }
+	// cout << "../COBRA_Data"<< endl;
+	// cout << "20" << endl;
+	// cout << "cpg" << endl; 
+	// cout << "root" << endl;
+
+//////////////////////////////////////// PART FOR DETECTOR //////////////////////////////////////////////////////////////////
+	double total_exposure = Get_Total_Exposure();
 
 
-		if( v_eve.at(i).Passed() ) //all cuts passed 
-		{
-			// v_eve.at(i).Print();
-			h[v_eve.at(i).Get_c_det() - 1]->Fill(v_eve.at(i).Get_c_ene());
-			// cout<< "cal_det size : " << v_eve.at(i).Get_c_det() << endl ;
-
-
-
-			// TTimeStamp* tts = new TTimeStamp(v_eve.at(i).Get_c_tim());
-
-			// switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
-			// {
-			// 	case 2013: h[0]->Fill(v_eve.at(i).Get_c_ene());
-			// 		       break;
-			// 	case 2014: h[1]->Fill(v_eve.at(i).Get_c_ene());
-			// 			   break;
-			// 	case 2015: h[2]->Fill(v_eve.at(i).Get_c_ene());
-			// 			   break;
-			// 	case 2016: h[3]->Fill(v_eve.at(i).Get_c_ene());
-			// 		       break;
-			// 	case 2017: h[4]->Fill(v_eve.at(i).Get_c_ene());
-			// 			   break;
-			// 	case 2018: h[5]->Fill(v_eve.at(i).Get_c_ene());
-			// 			   break;
-			// 	case 2019: h[6]->Fill(v_eve.at(i).Get_c_ene());
-			// 			   break;
-			// }
-
-			// delete tts;
-		}
-	}
-
-	TFile* tf = new TFile("CO_event-TChain_small_test.root", "RECREATE");
-	for (int d = 0; d < n_of_hist; d++)
-	{
-		c[d]->cd();
-		h[d]->Draw();
-		h[d]->Write();
-	}
-	delete tf;
+	cout << endl << endl ;
+	cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+	cout << "Total exposure = " << total_exposure << " kgd" 	  << endl; 
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// vector<paths> 	root_file_path = ReadFiles(); //Fills the vector with patch to each file. The struct holds: parent directory, years, folders, files
+	// vector<CO_event> 		v_eve;
+	// CO_detector 	a_det[n_of_det];
+
+
+//////////////////////////////////////// PART FOR EVENT //////////////////////////////////////////////////////////////////
+	// TH1F* 		h[n_of_hist];
+	// TCanvas* 	c[n_of_hist];
+
+	// // int year_for_title = 2013;
+	// int detector_number = 1;
+	// for(unsigned int y = 0; y < n_of_hist; y++)
+	// {
+	// 	stringstream 			 	   h_title;			//names for histograms		
+	// 	h_title  <<  "h_" <<   	detector_number;
+	// 	// h_title  <<  "h_" <<   	year_for_title;
+	// 	string h_tit_str  = 	 h_title.str();
+
+	// 	stringstream 				   c_title;			//names for canvases
+	// 	c_title  <<  "c_" <<    detector_number;
+	// 	// c_title  <<  "c_" <<    year_for_title;
+	// 	string c_tit_str  = 	 c_title.str();	
+
+	// 	h[y] = hist_style(h_tit_str);
+	// 	c[y] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
+
+	// 	// year_for_title++;
+	// 	detector_number++;
+	// }	
+	// const* char merged_cal = "merged_cal";
+	// TChain* t_cal = Make_TChain(root_file_path, merged_cal);
+
+	// vector<float>* 		ene = new vector<float>();
+	// vector<float>* 		ztc = new vector<float>();
+	// vector<float>* 		aoe = new vector<float>();
+	// vector<bool>*		fip = new vector<bool>();
+	// vector<bool>*		fbp = new vector<bool>();
+	// vector<double>*		tim = new vector<double>();
+	// vector<int>*		det = new vector<int>();
+	// vector<int>*		eid = new vector<int>();
+
+	// t_cal->SetBranchAddress("cal_edep", &ene);
+	// t_cal->SetBranchAddress("cal_ipos_ztc", &ztc);
+	// t_cal->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
+	// t_cal->SetBranchAddress("flag_injected_pulse", &fip);
+	// t_cal->SetBranchAddress("flag_bad_pulse", &fbp);
+	// t_cal->SetBranchAddress("info_systime", &tim);
+	// t_cal->SetBranchAddress("cal_det", &det);
+	// t_cal->SetBranchAddress("info_idx", &eid);
+
+	// sanity_check(t_cal);
+
+
+	// for(unsigned int j = 0; j < t_cal->GetEntries(); j++)
+	// {
+	// 	if(j%10000==0) cout << j << " of " << t_cal->GetEntries() << " Read!" << endl;
+	// 	t_cal->GetEntry(j);
+
+	// 	for(unsigned int k = 0; k < ene->size(); k++) ///MAROS EVENT
+	// 	{
+	// 		CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), tim->at(k)  ,
+	// 					                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
+	// 		e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
+	// 						                                        // bool   _fip , bool   _fbp ;
+	// 		v_eve.push_back(*e);
+
+	// 		delete	e;
+	// 	}
+
+	// 	ene->clear();
+	// 	ztc->clear();
+	// 	aoe->clear();
+	// 	fip->clear();
+	// 	fbp->clear();
+	// 	tim->clear();
+	// 	det->clear();
+	// 	eid->clear();
+	// }
+
+	// for(int i = 0; i < v_eve.size(); i++) //Filling Histograms
+	// {
+	// 	if( v_eve.at(i).Passed() ) //all cuts passed 
+	// 	{
+	// 		h[v_eve.at(i).Get_c_det() - 1]->Fill(v_eve.at(i).Get_c_ene());
+
+	// 		// TTimeStamp* tts = new TTimeStamp(v_eve.at(i).Get_c_tim());
+
+	// 		// switch(tts->GetDate()/10000) //tts.GetDate() is in format YYYYMMDD 
+	// 		// {
+	// 		// 	case 2013: h[0]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 		       break;
+	// 		// 	case 2014: h[1]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 			   break;
+	// 		// 	case 2015: h[2]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 			   break;
+	// 		// 	case 2016: h[3]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 		       break;
+	// 		// 	case 2017: h[4]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 			   break;
+	// 		// 	case 2018: h[5]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 			   break;
+	// 		// 	case 2019: h[6]->Fill(v_eve.at(i).Get_c_ene());
+	// 		// 			   break;
+	// 		// }
+
+	// 		// delete tts;
+	// 	}
+	// }
+
+	// TFile* tf = new TFile("CO_event-TChain_small_test.root", "RECREATE");
+	// for (int i = 0; i < n_of_hist; i++)
+	// {
+	// 	c[i]->cd();
+	// 	h[i]->Draw();
+	// 	h[i]->Write();
+	// }
+	// delete tf;
