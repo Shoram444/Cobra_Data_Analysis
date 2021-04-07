@@ -33,10 +33,26 @@ const double Q [9]  = { 271.8, 542.5, 866.5, 997.1, 1094.7, 						//Q of isotope
 						1730.4, 2527.5, 2775.4, 2813.4};							// 				70Zn, 64Zn, 120Te, 130Te, 106Cd, 116Cd
 
 
+
+
 ///////HEADER Functions /////////
+
+struct data_partition
+{
+	int 			p_dno;
+	Double_t 		p_sta_tim;
+	Double_t 		p_end_tim;
+	vector<double> 	p_ene;
+	double 			p_exp;
+	double 			p_p0;
+	double 			p_p1;
+	double 			p_p2;
+	TH1F 			p_his;
+};
 
 double 					Get_Resolution(int _d_id, double _E, vector<CO_detector>  _v_det); 
 vector<CO_detector>  	Fill_CO_detector(TChain* _T_Chain);
+vector<data_partition> 		create_partitions(TChain* _T_Chain);
 
 
 ///////FUNCTIONS - from MP.cpp ////////////
@@ -48,7 +64,6 @@ const bool layer 			= true;
 const bool Det 				= true;
 const char* 		   runs = "runs";
 // TChain* T_Chain;
-
 
 struct calib_date
 {
@@ -495,6 +510,105 @@ vector<calib_date> line_split(vector<string> _dates)
 }
 
 
+vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
+{
+	vector<data_partition> v_part;
+	int    	  sec_per_day = 86400;	//this is used in calculating exposure in units kgd
+	int 	  k 		  = 0;  	//partition indexing
+
+
+
+	vector<int>* 	dno = new vector<int>;
+	vector<double>* mas = new vector<double>;
+	Double_t		dur;
+	Double_t		tim;
+	vector<double>* p0  = new vector<double>;
+	vector<double>* p1  = new vector<double>;
+	vector<double>* p2  = new vector<double>;
+
+
+	_T_Chain->SetBranchAddress("det_no", &dno);
+	_T_Chain->SetBranchAddress("det_mass", &mas);
+	_T_Chain->SetBranchAddress("duration", &dur);
+	_T_Chain->SetBranchAddress("startTime", &tim);
+	_T_Chain->SetBranchAddress("det_res_p0", &p0);
+	_T_Chain->SetBranchAddress("det_res_p1", &p1);
+	_T_Chain->SetBranchAddress("det_res_p2", &p2);
+
+	data_partition* 	   p_part = new data_partition();
+
+	p_part->p_dno = _dno;
+	p_part->p_p0  =  -1.0;
+	p_part->p_p1  =  -1.0;
+	p_part->p_p2  =  -1.0;
+	p_part->p_exp =   0  ;
+	
+	v_part.push_back(*p_part);
+
+
+	for(unsigned int i = 0; i < _T_Chain->GetEntries(); i++ ) //
+	{
+		// if(i%10000==0) cout << i << " of " << _T_Chain->GetEntries() << " Read!" << endl;
+		_T_Chain->GetEntry(i);
+
+		for( unsigned int j = 0 ; j < dno->size() ; j++ )
+		{
+			data_partition* 	   temp_part = new data_partition();
+
+			if(isnan(p0->at(j))){continue;} //there are entries where p0 is nan. These will be skipped over. 
+
+			if(dno->at(j) == _dno)
+			{
+				if( k 				   == 0 		&& 			//for the first partition (initiated before) fill it up with the first entry in tchain
+				    v_part.at(k).p_p0  == -1.0		&&
+				    v_part.at(k).p_p1  == -1.0		&&
+				    v_part.at(k).p_p2  == -1.0		
+				  )
+				{
+					v_part.at(k).p_dno 		= dno->at(j);
+					v_part.at(k).p_sta_tim 	= tim;
+					v_part.at(k).p_exp 		= dur * mas->at(j) / sec_per_day;
+					v_part.at(k).p_p0 		= p0->at(j);
+					v_part.at(k).p_p1 		= p1->at(j);
+					v_part.at(k).p_p2 		= p2->at(j);
+
+					// v_part.push_back(*temp_part);
+				}
+				
+				else if( 	v_part.at(k).p_p0 == p0->at(j) 		&& //if all the parameters are the same in a partition, add exposure and end time as start of the partition + its duration
+							v_part.at(k).p_p1 == p1->at(j)     	&&
+							v_part.at(k).p_p2 == p2->at(j)
+					   )
+				{
+					v_part.at(k).p_exp		+= dur * mas->at(j) / sec_per_day;
+					v_part.at(k).p_end_tim 	= tim + dur; 			
+				}
+
+				else if(	v_part.at(k).p_p0 != p0->at(j)     || // if either of the parameters has changed, create new partition
+							v_part.at(k).p_p1 != p1->at(j)	   ||
+							v_part.at(k).p_p2 != p2->at(j)
+					   )
+				{
+					k+=1;
+
+					temp_part->p_dno 		= dno->at(j);
+					temp_part->p_sta_tim 	= tim;
+					temp_part->p_exp 		= dur * mas->at(j) / sec_per_day;
+					temp_part->p_p0 		= p0->at(j);
+					temp_part->p_p1 		= p1->at(j);
+					temp_part->p_p2 		= p2->at(j);
+
+					v_part.push_back(*temp_part);
+				}
+			}
+			delete temp_part;
+		}
+	}
+
+	return v_part;
+}
+
+
 
 
 void Calculate_Sensitivity() 
@@ -512,7 +626,35 @@ void Calculate_Sensitivity()
 
 	vector<string> 			root_file_path 	= 		ReadFiles();
 	TChain* 			 	T_Chain			=  		Make_TChain(root_file_path, runs);
-	vector<CO_detector>    	v_det			= 		Fill_CO_detector(T_Chain);
+	// vector<CO_detector>    	v_det			= 		Fill_CO_detector(T_Chain);
+
+	int total_partitions = 0;
+	double exposure_partitions = 0;
+	vector<data_partition>       v_part[64];
+
+	cout << " =====================================" << endl;
+	cout << " dno \t | start \t | end \t | exp \t | p0 \t | p1 \t | p2 \t | " << endl;
+	for(int i = 0; i < 64; i++)
+	{
+		v_part[i]	= 		create_partitions(T_Chain, i+1);
+		for(int j = 0 ; j < v_part[i].size(); j++)
+		{
+			cout 	<< v_part[i].at(j).p_dno 		<< " \t|" 
+					<< v_part[i].at(j).p_sta_tim 	<< " \t|"
+					<< v_part[i].at(j).p_end_tim 	<< " \t|"
+					<< v_part[i].at(j).p_exp	 	<< " \t|"
+					<< v_part[i].at(j).p_p0	 		<< " \t|"
+					<< v_part[i].at(j).p_p1	 		<< " \t|"
+					<< v_part[i].at(j).p_p2	 		<< " \t|" << endl;
+			exposure_partitions += v_part[i].at(j).p_exp;
+		}
+		total_partitions += v_part[i].size();
+		cout << " =====================================" << endl;
+
+	}
+	cout << " Number of partitions created : " << total_partitions << endl;
+	cout << " Total Exposure : " 				<< exposure_partitions << endl;
+
 	// MPFeldman_Cousins* 		obj 			= 		new MPFeldman_Cousins(gaus_cutoff, 0.9);
 	// TFile* 					tf 				= 		new TFile("./Final_histograms/1st_cuts_w_flushing/CO_event-TChain_detectors.root");
 
@@ -587,120 +729,121 @@ void Calculate_Sensitivity()
 
 	// }
 
-	// string fname 			= ;
-	vector<string> 	    dates 	= lines_from_file("Calib_Dates.txt");
-	vector<calib_date>  v_cd    = line_split(dates);
+ 	//////////////////////////////////////// Detector Parameters ////////////////////	
 
-	Double_t 			d_det_res_p0;
-	Double_t 			d_det_res_p1;
-	Double_t 			d_det_res_p2;
-	Double_t			d_time;
+	// vector<string> 	    dates 	= lines_from_file("Calib_Dates.txt");
+	// vector<calib_date>  v_cd    = line_split(dates);
 
-	TCanvas* 	c0 = new TCanvas("c0","p0 parameter in time",900,600);
-	TCanvas* 	c1 = new TCanvas("c1","p1 parameter in time",900,600);
-	TCanvas* 	c2 = new TCanvas("c2","p2 parameter in time",900,600);
-	TGraph* 	tg0 = new TGraph();//points, d_time, d_det_res_p0);
-	TGraph* 	tg1 = new TGraph();//points, d_time, d_det_res_p0);
-	TGraph* 	tg2 = new TGraph();//points, d_time, d_det_res_p0);
+	// Double_t 			d_det_res_p0;
+	// Double_t 			d_det_res_p1;
+	// Double_t 			d_det_res_p2;
+	// Double_t			d_time;
 
-
-	int points = 0;
-	for(int i = 0; i < v_det.size(); i++)
-	{
-
-		if(v_det.at(i).get_c_dno() == 1)
-		{
-			d_det_res_p0 = (Double_t) v_det.at(i).get_c_p0();
-			d_det_res_p1 = (Double_t) 10*v_det.at(i).get_c_p1();
-			d_det_res_p2 = (Double_t) 1000*v_det.at(i).get_c_p2();
-			d_time = v_det.at(i).get_c_tim();
-
-			tg0->SetPoint(points,d_time, d_det_res_p0);
-			tg1->SetPoint(points,d_time, d_det_res_p1);
-			tg2->SetPoint(points,d_time, d_det_res_p2);
-			points +=1;
-
-		}
-
-	}
-
- 	tg0->SetMarkerStyle(8);
- 	tg0->SetMarkerColor(3);
-
-	tg1->SetMarkerStyle(2);
- 	tg1->SetMarkerColor(4);
-
-	tg2->SetMarkerStyle(22);
- 	tg2->SetMarkerColor(5);
+	// TCanvas* 	c0 = new TCanvas("c0","p0 parameter in time",900,600);
+	// TCanvas* 	c1 = new TCanvas("c1","p1 parameter in time",900,600);
+	// TCanvas* 	c2 = new TCanvas("c2","p2 parameter in time",900,600);
+	// TGraph* 	tg0 = new TGraph();//points, d_time, d_det_res_p0);
+	// TGraph* 	tg1 = new TGraph();//points, d_time, d_det_res_p0);
+	// TGraph* 	tg2 = new TGraph();//points, d_time, d_det_res_p0);
 
 
+	// int points = 0;
+	// for(int i = 0; i < v_det.size(); i++)
+	// {
 
-	tg0->SetTitle("Resolution Fit Parameter 0 in Time, Detector ID: 1");
-	tg0->GetXaxis()->SetTitle("Unix Time [ns]");
-	tg0->GetYaxis()->SetRangeUser(0, 55);
-	tg0->GetYaxis()->SetTitle("Parameter 0 [keV]");
+	// 	if(v_det.at(i).get_c_dno() == 1)
+	// 	{
+	// 		d_det_res_p0 = (Double_t) v_det.at(i).get_c_p0();
+	// 		d_det_res_p1 = (Double_t) 10*v_det.at(i).get_c_p1();
+	// 		d_det_res_p2 = (Double_t) 1000*v_det.at(i).get_c_p2();
+	// 		d_time = v_det.at(i).get_c_tim();
+
+	// 		tg0->SetPoint(points,d_time, d_det_res_p0);
+	// 		tg1->SetPoint(points,d_time, d_det_res_p1);
+	// 		tg2->SetPoint(points,d_time, d_det_res_p2);
+	// 		points +=1;
+
+	// 	}
+
+	// }
+
+ // 	tg0->SetMarkerStyle(8);
+ // 	tg0->SetMarkerColor(3);
+
+	// tg1->SetMarkerStyle(2);
+ // 	tg1->SetMarkerColor(4);
+
+	// tg2->SetMarkerStyle(22);
+ // 	tg2->SetMarkerColor(5);
+
+
+
+	// tg0->SetTitle("Resolution Fit Parameter 0 in Time, Detector ID: 1");
+	// tg0->GetXaxis()->SetTitle("Unix Time [ns]");
+	// tg0->GetYaxis()->SetRangeUser(0, 55);
+	// tg0->GetYaxis()->SetTitle("Parameter 0 [keV]");
 
 	
 
-	// TLine* tl0[i] = new TLine(	1389271413, 0 ,1389271413 ,55 )	;
+	// // TLine* tl0[i] = new TLine(	1389271413, 0 ,1389271413 ,55 )	;
 
 
-	tg1->SetTitle("Resolution Fit Parameter 1 in Time, Detector ID: 1");
-	tg1->GetXaxis()->SetTitle("Unix Time [ns]");
-	tg1->GetYaxis()->SetRangeUser(0, 1);
-	tg1->GetYaxis()->SetTitle("Parameter 1 [keV]");	
+	// tg1->SetTitle("Resolution Fit Parameter 1 in Time, Detector ID: 1");
+	// tg1->GetXaxis()->SetTitle("Unix Time [ns]");
+	// tg1->GetYaxis()->SetRangeUser(0, 1);
+	// tg1->GetYaxis()->SetTitle("Parameter 1 [keV]");	
 
-	tg2->SetTitle("Resolution Fit Parameter 2 in Time, Detector ID: 1");
-	tg2->GetXaxis()->SetTitle("Unix Time [ns]");
-	tg2->GetYaxis()->SetRangeUser(-0.01, 0.015);
-	tg2->GetYaxis()->SetTitle("Parameter 2 [keV]");
+	// tg2->SetTitle("Resolution Fit Parameter 2 in Time, Detector ID: 1");
+	// tg2->GetXaxis()->SetTitle("Unix Time [ns]");
+	// tg2->GetYaxis()->SetRangeUser(-0.01, 0.015);
+	// tg2->GetYaxis()->SetTitle("Parameter 2 [keV]");
 
-	c0->cd();
-	tg0->Draw("ap");
-	TLine* tl0[v_cd.size()];
-	TLine* tl1[v_cd.size()];
-	TLine* tl2[v_cd.size()];
-	for(int i = 0; i < v_cd.size() - 1 ; i++ )
-	{
-		TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
-		tl0[i] = new TLine(	tts->AsDouble(), 0 ,tts->AsDouble() ,55 )	;
-		tl0[i]->Draw("SAME");
-	}
-	// tg0->Draw("al");
-	// tl0->Draw();
+	// c0->cd();
+	// tg0->Draw("ap");
+	// TLine* tl0[v_cd.size()];
+	// TLine* tl1[v_cd.size()];
+	// TLine* tl2[v_cd.size()];
+	// for(int i = 0; i < v_cd.size() - 1 ; i++ )
+	// {
+	// 	TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
+	// 	tl0[i] = new TLine(	tts->AsDouble(), 0 ,tts->AsDouble() ,55 )	;
+	// 	tl0[i]->Draw("SAME");
+	// }
+	// // tg0->Draw("al");
+	// // tl0->Draw();
 
-	c1->cd();
-	tg1->Draw("ap");
-	for(int i = 0; i < v_cd.size() - 1 ; i++ )
-	{
-		TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
-		tl1[i] = new TLine(	tts->AsDouble(), 0 ,tts->AsDouble() ,1 )	;
-		tl1[i]->Draw("SAME");
-	}
+	// c1->cd();
+	// tg1->Draw("ap");
+	// for(int i = 0; i < v_cd.size() - 1 ; i++ )
+	// {
+	// 	TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
+	// 	tl1[i] = new TLine(	tts->AsDouble(), 0 ,tts->AsDouble() ,1 )	;
+	// 	tl1[i]->Draw("SAME");
+	// }
 
-	c2->cd();
-	tg2->Draw("ap");
-	for(int i = 0; i < v_cd.size() - 1 ; i++ )
-	{
-		TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
-		tl2[i] = new TLine(	tts->AsDouble(), -0.01,tts->AsDouble() , 0.015 )	;
-		tl2[i]->Draw("SAME");
-	}
-
-
-
-	TCanvas* 	c3 = new TCanvas("c3","Calibration Parameters in time",900,600);
-	c3->cd();
-	TMultiGraph *mg = new TMultiGraph();
-	mg->Add(tg0);
-	mg->Add(tg1);
-	mg->Add(tg2);
+	// c2->cd();
+	// tg2->Draw("ap");
 	// for(int i = 0; i < v_cd.size() - 1 ; i++ )
 	// {
 	// 	TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
 	// 	tl2[i] = new TLine(	tts->AsDouble(), -0.01,tts->AsDouble() , 0.015 )	;
-	// 	mg->Add(tl2[i]);
+	// 	tl2[i]->Draw("SAME");
 	// }
-	mg->Draw("ap");
+
+
+
+	// TCanvas* 	c3 = new TCanvas("c3","Calibration Parameters in time",900,600);
+	// c3->cd();
+	// TMultiGraph *mg = new TMultiGraph();
+	// mg->Add(tg0);
+	// mg->Add(tg1);
+	// mg->Add(tg2);
+	// // for(int i = 0; i < v_cd.size() - 1 ; i++ )
+	// // {
+	// // 	TTimeStamp* tts = new TTimeStamp(v_cd.at(i).year,v_cd.at(i).month, v_cd.at(i).day, v_cd.at(i).hour, v_cd.at(i).minute, v_cd.at(i).second, v_cd.at(i).nanosecond );
+	// // 	tl2[i] = new TLine(	tts->AsDouble(), -0.01,tts->AsDouble() , 0.015 )	;
+	// // 	mg->Add(tl2[i]);
+	// // }
+	// mg->Draw("ap");
 
 }
