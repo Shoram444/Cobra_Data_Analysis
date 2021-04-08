@@ -13,6 +13,7 @@
 
 #include "/home/shoram/Work/Diploma_Thesis/MPFC/include/MPFeldman_Cousins.hh"
 #include "/home/shoram/Work/Diploma_Thesis/CO_detector/include/CO_detector.hh"
+#include "/home/shoram/Work/Diploma_Thesis/CO_event/include/CO_event.hh"
 
 using namespace boost;
 using namespace std;
@@ -20,6 +21,7 @@ using namespace std;
 
 R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/MPFC/lib/libMPFC.so);
 R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_detector/lib/libCO_detector.so);
+R__LOAD_LIBRARY(/home/shoram/Work/Diploma_Thesis/CO_event/lib/libCO_event.so);
 
 
 const double ln2 	= log(2);
@@ -47,12 +49,25 @@ struct data_partition
 	double 			p_p0;
 	double 			p_p1;
 	double 			p_p2;
-	TH1F 			p_his;
+
+
+	double Get_p_res(double _E)
+	{
+		double 		p_res 			=  0; 
+	    int         power           =  2;
+	    double      p1_times_sqrt_E = p_p1*sqrt(_E);  
+	    double      p2_times_E      = p_p2*_E;  
+
+	    p_res      = sqrt( pow(p_p0,power) + pow(p1_times_sqrt_E,power) + pow(p2_times_E, power) );
+	    return p_res;
+	}
+	
 };
 
 double 					Get_Resolution(int _d_id, double _E, vector<CO_detector>  _v_det); 
 vector<CO_detector>  	Fill_CO_detector(TChain* _T_Chain);
-vector<data_partition> 		create_partitions(TChain* _T_Chain);
+vector<data_partition>  create_partitions(TChain* _T_Chain_det, TChain* _T_Chain_eve , int _dno);
+TH1F* hist_style(string _title);
 
 
 ///////FUNCTIONS - from MP.cpp ////////////
@@ -63,6 +78,7 @@ const bool global 			= true;
 const bool layer 			= true;
 const bool Det 				= true;
 const char* 		   runs = "runs";
+const char*      merged_cal = "merged_cal";
 // TChain* T_Chain;
 
 struct calib_date
@@ -393,7 +409,7 @@ double Get_Total_Exposure(int _d_id, vector<CO_detector>   _v_det, bool _all = f
 
 double Get_Resolution(int _d_id, double _E, vector<CO_detector>  _v_det)
 {
-	double d_sen;
+	double d_res;
 
 	for(int i = 0; i < _v_det.size(); i++)
 	{
@@ -401,12 +417,12 @@ double Get_Resolution(int _d_id, double _E, vector<CO_detector>  _v_det)
 		{
 			if(_v_det.at(i).get_c_dno() == _d_id)
 			{
-				d_sen = _v_det.at(i).calc_sensitivity(_E);
+				d_res = _v_det.at(i).calc_sensitivity(_E);
 			}
 		}
 	}
 
-  	return d_sen;
+  	return d_res;
 
 }
 
@@ -510,7 +526,7 @@ vector<calib_date> line_split(vector<string> _dates)
 }
 
 
-vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
+vector<data_partition> create_partitions(TChain* _T_Chain_det, TChain* _T_Chain_eve , int _dno)
 {
 	vector<data_partition> v_part;
 	int    	  sec_per_day = 86400;	//this is used in calculating exposure in units kgd
@@ -527,13 +543,13 @@ vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
 	vector<double>* p2  = new vector<double>;
 
 
-	_T_Chain->SetBranchAddress("det_no", &dno);
-	_T_Chain->SetBranchAddress("det_mass", &mas);
-	_T_Chain->SetBranchAddress("duration", &dur);
-	_T_Chain->SetBranchAddress("startTime", &tim);
-	_T_Chain->SetBranchAddress("det_res_p0", &p0);
-	_T_Chain->SetBranchAddress("det_res_p1", &p1);
-	_T_Chain->SetBranchAddress("det_res_p2", &p2);
+	_T_Chain_det->SetBranchAddress("det_no", &dno);
+	_T_Chain_det->SetBranchAddress("det_mass", &mas);
+	_T_Chain_det->SetBranchAddress("duration", &dur);
+	_T_Chain_det->SetBranchAddress("startTime", &tim);
+	_T_Chain_det->SetBranchAddress("det_res_p0", &p0);
+	_T_Chain_det->SetBranchAddress("det_res_p1", &p1);
+	_T_Chain_det->SetBranchAddress("det_res_p2", &p2);
 
 	data_partition* 	   p_part = new data_partition();
 
@@ -546,10 +562,10 @@ vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
 	v_part.push_back(*p_part);
 
 
-	for(unsigned int i = 0; i < _T_Chain->GetEntries(); i++ ) //
+	for(unsigned int i = 0; i < _T_Chain_det->GetEntries(); i++ ) //
 	{
-		// if(i%10000==0) cout << i << " of " << _T_Chain->GetEntries() << " Read!" << endl;
-		_T_Chain->GetEntry(i);
+		// if(i%10000==0) cout << i << " of " << _T_Chain_det->GetEntries() << " Read!" << endl;
+		_T_Chain_det->GetEntry(i);
 
 		for( unsigned int j = 0 ; j < dno->size() ; j++ )
 		{
@@ -572,9 +588,15 @@ vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
 					v_part.at(k).p_p1 		= p1->at(j);
 					v_part.at(k).p_p2 		= p2->at(j);
 
+
+					// stringstream 			 	   h_title;			//names for histograms		
+					// h_title  <<  "h_" <<   	_dno << "-" << k;
+					// string h_tit_str  = 	 h_title.str();
+
+
 					// v_part.push_back(*temp_part);
 				}
-				
+
 				else if( 	v_part.at(k).p_p0 == p0->at(j) 		&& //if all the parameters are the same in a partition, add exposure and end time as start of the partition + its duration
 							v_part.at(k).p_p1 == p1->at(j)     	&&
 							v_part.at(k).p_p2 == p2->at(j)
@@ -598,6 +620,11 @@ vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
 					temp_part->p_p1 		= p1->at(j);
 					temp_part->p_p2 		= p2->at(j);
 
+					// stringstream 			 	   h_title;			//names for histograms		
+					// h_title  <<  "h_" <<   	_dno << "-" << k;
+					// string h_tit_str  = 	 h_title.str();
+
+
 					v_part.push_back(*temp_part);
 				}
 			}
@@ -605,10 +632,84 @@ vector<data_partition> create_partitions(TChain* _T_Chain, int _dno)
 		}
 	}
 
+	// vector<float>* 		ene = new vector<float>();
+	// vector<float>* 		ztc = new vector<float>();
+	// vector<float>* 		aoe = new vector<float>();
+	// vector<bool>*		fip = new vector<bool>();
+	// vector<bool>*		fbp = new vector<bool>();
+	// vector<double>*		eti = new vector<double>(); //time of the event had to be renamed to eti, cause tim is already present in detector tree
+	// vector<int>*		det = new vector<int>();
+	// vector<int>*		eid = new vector<int>();
+
+	// _T_Chain_eve->SetBranchAddress("cal_edep", &ene);
+	// _T_Chain_eve->SetBranchAddress("cal_ipos_ztc", &ztc);
+	// _T_Chain_eve->SetBranchAddress("cal_cpg_diff_AoE", &aoe);
+	// _T_Chain_eve->SetBranchAddress("flag_injected_pulse", &fip);
+	// _T_Chain_eve->SetBranchAddress("flag_bad_pulse", &fbp);
+	// _T_Chain_eve->SetBranchAddress("info_systime", &eti);
+	// _T_Chain_eve->SetBranchAddress("cal_det", &det);
+	// _T_Chain_eve->SetBranchAddress("info_idx", &eid);
+
+	// sanity_check(_T_Chain_eve);
+
+	// int en = 0;
+
+	// for(unsigned int j = 0; j < _T_Chain_eve->GetEntries(); j++)
+	// {
+	// 	// if(j%10000==0) cout << j << " of " << _T_Chain_eve->GetEntries() << " Read!" << endl;
+	// 	_T_Chain_eve->GetEntry(j);
+
+	// 	for(unsigned int k = 0; k < ene->size(); k++) ///MAROS EVENT
+	// 	{
+	// 		CO_event* e = new CO_event( ene->at(k), ztc->at(k), aoe->at(k), eti->at(k)  ,
+	// 					                det->at(k), eid->at(k), fip->at(k), fbp->at(k)	);
+	// 		e->InitCuts(0.2 , 0.95 , 0.872 , 1.3 , false , false ); // double _ztc_min , double _ztc_max , double _aoe_min , double _aoe_max ,
+	// 						                                        // bool   _fip , bool   _fbp ;
+
+	// 		if(e->Passed())
+	// 		{
+	// 			for(int l = 0; l < v_part.size() ; l++)
+	// 			{
+	// 				if(e->Get_c_tim() > v_part.at(l).p_sta_tim &&
+	// 				   e->Get_c_tim() < v_part.at(l).p_end_tim )
+	// 				{
+	// 					v_part.at(l).p_ene.push_back(e->Get_c_ene());
+	// 					// cout << " energy in partition: " << v_part.at(l).p_ene.at(en);
+	// 					// en++;
+	// 				}
+	// 			}
+	// 		}
+	// 		// v_eve.push_back(*e);
+
+	// 		delete	e;
+	// 	}
+
+	// 	ene->clear();
+	// 	ztc->clear();
+	// 	aoe->clear();
+	// 	fip->clear();
+	// 	fbp->clear();
+	// 	eti->clear();
+	// 	det->clear();
+	// 	eid->clear();
+	// }
+
+
+
 	return v_part;
 }
 
 
+TH1F* hist_style(string _title)
+{
+	TH1F* _h = new TH1F(_title.c_str(), _title.c_str(), 5000, 0.0, 10000.0);
+	
+	_h->SetLineWidth(2);
+    _h->GetXaxis()->SetTitle("Energy [keV]");
+    _h->GetYaxis()->SetTitle("Counts [ # /2keV]");
+
+    return _h;
+}
 
 
 void Calculate_Sensitivity() 
@@ -625,8 +726,10 @@ void Calculate_Sensitivity()
 	double 	resolution 		[9];
 
 	vector<string> 			root_file_path 	= 		ReadFiles();
-	TChain* 			 	T_Chain			=  		Make_TChain(root_file_path, runs);
-	// vector<CO_detector>    	v_det			= 		Fill_CO_detector(T_Chain);
+	TChain* 			 	T_Chain_det		=  		Make_TChain(root_file_path, runs);
+	TChain* 			 	T_Chain_eve	    =  		Make_TChain(root_file_path, merged_cal);
+
+	//// CREATION OF PARTITIONS 					 	/////////////////////
 
 	int total_partitions = 0;
 	double exposure_partitions = 0;
@@ -636,7 +739,7 @@ void Calculate_Sensitivity()
 	cout << " dno \t | start \t | end \t | exp \t | p0 \t | p1 \t | p2 \t | " << endl;
 	for(int i = 0; i < 64; i++)
 	{
-		v_part[i]	= 		create_partitions(T_Chain, i+1);
+		v_part[i]	= 		create_partitions(T_Chain_det, T_Chain_eve, i+1);
 		for(int j = 0 ; j < v_part[i].size(); j++)
 		{
 			cout 	<< v_part[i].at(j).p_dno 		<< " \t|" 
@@ -652,8 +755,70 @@ void Calculate_Sensitivity()
 		cout << " =====================================" << endl;
 
 	}
-	cout << " Number of partitions created : " << total_partitions << endl;
+	cout << " Number of partitions created : " 	<< total_partitions << endl;
 	cout << " Total Exposure : " 				<< exposure_partitions << endl;
+
+	TH1F* 		h_p[total_partitions];
+	TCanvas* 	c_p[total_partitions];
+	
+	ofstream myfile;
+	myfile.open ("Data_Partitions/Detector_Partitions_info.txt");
+	myfile << "detector number; partition number; start time; end time; no of events inside; exposure; p0;p1;p2 \n";
+	for(unsigned int i = 0; i < 64; i++)
+	{
+
+		for(int p = 0; p < v_part[i].size(); p++)
+		{
+			stringstream 			 	   h_title;			//names for histograms		
+			h_title  <<  "h_" <<   	i << "-" << p;
+			string h_tit_str  = 	 h_title.str();
+
+			stringstream 				   c_title;			//names for canvases
+			c_title  <<  "c_" <<    i << "-" << p;
+			string c_tit_str  = 	 c_title.str();	
+
+			h_p[i] = hist_style(h_tit_str);
+			c_p[i] = new TCanvas(c_tit_str.c_str(), c_tit_str.c_str());
+
+			myfile  << v_part[i].at(p).p_dno 		<< "; "
+					<< p 							<< "; "
+					<< v_part[i].at(p).p_sta_tim	<< "; "
+					<< v_part[i].at(p).p_end_tim	<< "; "
+					<< v_part[i].at(p).p_ene.size()	<< "; "
+					<< v_part[i].at(p).p_exp		<< "; "
+					<< v_part[i].at(p).p_p0 		<< "; "
+					<< v_part[i].at(p).p_p1 		<< "; "
+					<< v_part[i].at(p).p_p2 		<< "\n";
+
+			// for(int j = 0; j < v_part[i].at(p).p_ene.size(); j++)
+			// {
+			// 	h_p[i]->Fill(v_part[i].at(p).p_ene.at(j));
+
+			// 	// stringstream 	partition_info;
+				
+			// 	// myfile << partition_info ;
+			// }
+		}
+	}	
+	myfile.close();
+
+
+
+	// TFile* tf = new TFile("CALCULATE_SENSITIVITY_ALL_HISTOGRAMS.root", "RECREATE");
+	// for (int i = 0; i < total_partitions; i++)
+	// {
+	// 	// c_p[i]->cd();
+	// 	// h_p[i]->Draw();
+	// 	h_p[i]->Write();
+	// }
+	// delete tf;
+
+	//// CREATION OF PARTITIONS 					 	/////////////////////
+
+	//// ----------------------------------------- 		/////////////////////
+
+	//// CALCULATING T1/2 FROM HISTOGRAMS	 		 	/////////////////////
+
 
 	// MPFeldman_Cousins* 		obj 			= 		new MPFeldman_Cousins(gaus_cutoff, 0.9);
 	// TFile* 					tf 				= 		new TFile("./Final_histograms/1st_cuts_w_flushing/CO_event-TChain_detectors.root");
@@ -728,6 +893,10 @@ void Calculate_Sensitivity()
 	// 	detector_ID += 1;
 
 	// }
+
+	//// CALCULATING T1/2 FROM HISTOGRAMS	 		 	/////////////////////
+
+	//// ----------------------------------------- 		/////////////////////
 
  	//////////////////////////////////////// Detector Parameters ////////////////////	
 
