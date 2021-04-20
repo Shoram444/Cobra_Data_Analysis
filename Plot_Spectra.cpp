@@ -13,7 +13,7 @@
 
 using namespace std;
 
-const int n_of_hist = 7;
+const int n_of_hist = 64;
 
 void Plot_Spectra() 
 {
