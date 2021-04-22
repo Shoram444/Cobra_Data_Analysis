@@ -107,8 +107,10 @@ vector<string>* ListFiles(string _path, string _key)
     			continue;
     		}
 
-            size_t found = strname.find(_key);	 //checking if "years_ksey" is present in the string. 
-		  	if (found!=std::string::npos){file_list->push_back(dir->d_name);}
+    		file_list->push_back(dir->d_name)
+
+     //        size_t found = strname.find(_key);	 //checking if "years_ksey" is present in the string. 
+		  	// if (found!=std::string::npos){file_list->push_back(dir->d_name);}
         }
         closedir(di);
     }
